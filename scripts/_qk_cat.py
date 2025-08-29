@@ -1,20 +1,28 @@
 import sys
 import os
 import pyperclip
+from pathlib import Path
 
-file_name = sys.argv[1]
+argv1 = sys.argv[1]
 
-output = [f'{os.path.basename(file_name)}.h:\n']
+output = []
 
-with open(f'{file_name}.h', 'r', encoding='UTF-8') as head:
-    output.append(head.read())
+def write_to_output(path):
+    output.append(f'\n---> {os.path.basename(path)} <---\n\n')
+    if Path(path).exists():
+        with open(path, 'r', encoding='UTF-8') as fd:
+            output.append(fd.read())
 
-output.append('')
+path = Path(argv1)
 
-output.append(f'{os.path.basename(file_name)}.cpp:\n')
-with open(f'{file_name}.cpp', 'r', encoding='UTF-8') as source:
-    output.append(source.read())
+if path.suffix:
+    write_to_output(argv1)
+else:
+    write_to_output(f'{argv1}.h')
+    write_to_output(f'{argv1}.cpp')
 
 text = ''.join(output)
 
 pyperclip.copy(text)
+
+print(text)
