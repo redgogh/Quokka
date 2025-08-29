@@ -8,6 +8,7 @@ INCLUDE_DIRECTORIES(SYSTEM "thirdparty" "include")
 
 ADD_SUBDIRECTORY("modules/volk")
 ADD_SUBDIRECTORY("modules/stb")
+ADD_SUBDIRECTORY("modules/imgui")
 
 IF (APPLE)
     LINK_DIRECTORIES("thirdparty/GLFW/libs/macOS/lib-x86_64")
@@ -27,6 +28,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE
   "volk"
   "stb"
   "glfw3"
+  "imgui"
 )
 
 IF (APPLE)
