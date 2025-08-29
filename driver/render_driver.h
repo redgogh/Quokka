@@ -8,7 +8,7 @@
 #endif /* ENABLE_VOLK_LOADER */
 
 #include <vma/vk_mem_alloc.h>
-#include <capybara/typedefs.h>
+#include <quokka/typedefs.h>
 
 // std
 #include <assert.h>
