@@ -60,6 +60,8 @@ public:
     VkInstance GetInstance() const { return instance; }
     VkQueue GetGraphicsQueue() const { return queue; }
     VkQueue GetPresentQueue() const { return queue; }
+    VkExtent2D GetSwapchainExtent2D() const { return swapchainExtent2D; }
+    float GetSwapchainAspectRatio() const { return swapchainExtent2D.width / swapchainExtent2D.height; }
 
 private:
     VkResult _CreateInstance();
