@@ -19,9 +19,9 @@ struct Vertex
 };
 
 Vertex vertices[] = {
-    {{0.0, -0.5}, {1.0f, 0.0f, 0.0f}}, // 上
-    {{0.5, 0.5}, {0.0f, 1.0f, 0.0f}}, // 左
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}} // 右
+    {{  0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }}, // 上
+    {{  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f }}, // 左
+    {{ -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }}  // 右
 };
 
 int main()
@@ -49,7 +49,7 @@ int main()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     GLFWwindow* hwindow =
-        glfwCreateWindow(800, 600, "capybara", nullptr, nullptr);
+        glfwCreateWindow(800, 600, "Quokka", nullptr, nullptr);
 
     if (hwindow == nullptr)
         throw std::runtime_error("Failed to create GLFW window");

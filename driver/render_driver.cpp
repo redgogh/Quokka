@@ -292,7 +292,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;            // 填充多边形方式点、线、面
     rasterizationStateCreateInfo.lineWidth = 1.0f;                              // 线宽
     rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;              // 背面剔除，可改 NONE 或 FRONT
-    rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;              // 前向面定义
+    rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;           // 前向面定义
     rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;                    // 不使用深度偏移
     rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
     rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
@@ -498,7 +498,7 @@ void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer)
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
         .clearValue = {
-            .color = { 0.5f, 0.5f, 0.5f, 1.0f }
+            .color = { 0.0f, 0.0f, 0.0f, 1.0f }
         }
     };
 
