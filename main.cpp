@@ -71,8 +71,9 @@ int main()
     driver->CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &vertexBuffer);
     driver->WriteBuffer(vertexBuffer, vertexBufferSize, vertices);
 
+    glm::vec3 position(0.0f, 0.0f, 3.0f);
     float aspectRatio = driver->GetSwapchainAspectRatio();
-    Camera camera(0.0f, 0.0f, 3.0f, aspectRatio);
+    Camera camera(position, aspectRatio);
 
     while (!glfwWindowShouldClose(hwindow)) {
         glfwPollEvents();
@@ -82,18 +83,18 @@ int main()
         /* 计算 MVP 矩阵 */
         glm::mat4 PC_MVP = camera.GetProjectionMatrix() * camera.GetViewMatrix() * glm::mat4(1.0f);
 
-        VkCommandBuffer commandBuffer;
-        driver->AcquiredNextFrame(&commandBuffer);
+        VkCommandBuffer cmd;
+        driver->AcquiredNextFrame(&cmd);
 
-        driver->BeginCommandBuffer(commandBuffer);
-        driver->CmdBeginRendering(commandBuffer);
-        driver->CmdBindPipeline(commandBuffer, pipeline);
-        driver->CmdPushConstants(commandBuffer, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
-        driver->CmdBindVertexBuffer(commandBuffer, vertexBuffer, 0);
-        driver->CmdDraw(commandBuffer, ARRAY_SIZE(vertices));
-        driver->CmdEndRendering(commandBuffer);
-        driver->EndCommandBuffer(commandBuffer);
-        driver->SubmitAndPresentFrame(commandBuffer);
+        driver->BeginCommandBuffer(cmd);
+        driver->CmdBeginRendering(cmd);
+        driver->CmdBindPipeline(cmd, pipeline);
+        driver->CmdPushConstants(cmd, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
+        driver->CmdBindVertexBuffer(cmd, vertexBuffer, 0);
+        driver->CmdDraw(cmd, ARRAY_SIZE(vertices));
+        driver->CmdEndRendering(cmd);
+        driver->EndCommandBuffer(cmd);
+        driver->SubmitAndPresentFrame(cmd);
     }
 
     driver->DeviceWaitIdle();
