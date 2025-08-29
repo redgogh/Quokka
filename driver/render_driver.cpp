@@ -262,7 +262,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     };
 
     VkVertexInputBindingDescription vertexInputBindingDescriptions[] = {
-        { 0, sizeof(float) * 6, VK_VERTEX_INPUT_RATE_VERTEX }
+        { 0, sizeof(float) * 5, VK_VERTEX_INPUT_RATE_VERTEX }
     };
 
     VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
