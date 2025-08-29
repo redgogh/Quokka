@@ -5,17 +5,18 @@
 
 class Camera {
 public:
-    Camera(float x, float y, float z, float vAspectRatio);
+    Camera(const glm::vec3& position, float aspectRatio);
    ~Camera();
 
     void Update();
-    void Move(float x, float y, float z);
 
-    void SetPosition(float x, float y, float z);
-    void SetFov(float vFov);
-    void SetAspectRatio(float vAspectRatio);
-    void SetNear(float vNear);
-    void SetFar(float vFar);
+    void SetPosition(const glm::vec3& pos);
+    void SetDirection(const glm::vec3& dir);
+
+    void SetFov(float fov);
+    void SetAspectRatio(float aspectRatio);
+    void SetNear(float near);
+    void SetFar(float far);
 
     const glm::mat4& GetViewMatrix() const;
     const glm::mat4& GetProjectionMatrix() const;

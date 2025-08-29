@@ -1,8 +1,9 @@
 #include "camera.h"
 
-Camera::Camera(float x, float y, float z, float vAspectRatio) : position(x, y, z)
+Camera::Camera(const glm::vec3& position, float aspectRatio)
 {
-    SetAspectRatio(vAspectRatio);
+    SetPosition(position);
+    SetAspectRatio(aspectRatio);
     MarkViewDirty();
     MarkProjectionDirty();
     Update();
@@ -16,8 +17,9 @@ Camera::~Camera()
 void Camera::Update()
 {
     if (viewDirty) {
-        direction = glm::normalize(direction);
-        view = glm::lookAt(position, position + direction, up);
+        const glm::vec3 dir = glm::normalize(direction);
+        const glm::vec3 target = position + dir;
+        view = glm::lookAt(position, target, up);
         UnmarkViewDirty();
     }
 
@@ -28,38 +30,39 @@ void Camera::Update()
     }
 }
 
-void Camera::Move(float x, float y, float z)
+void Camera::SetPosition(const glm::vec3 &pos)
 {
-    SetPosition(position.x + x, position.y + y, position.z + z);
-}
-
-void Camera::SetPosition(float x, float y, float z)
-{
-    this->position = glm::vec3(x, y, z);
+    this->position = pos;
     MarkViewDirty();
 }
 
-void Camera::SetFov(float vFov)
+void Camera::SetDirection(const glm::vec3 &dir)
 {
-    this->fov = vFov;
+    this->direction = dir;
+    MarkViewDirty();
+}
+
+void Camera::SetFov(float fov)
+{
+    this->fov = fov;
     MarkProjectionDirty();
 }
 
-void Camera::SetAspectRatio(float vAspectRatio)
+void Camera::SetAspectRatio(float aspectRatio)
 {
-    this->aspectRatio = vAspectRatio;
+    this->aspectRatio = aspectRatio;
     MarkProjectionDirty();
 }
 
-void Camera::SetFar(float vFar)
+void Camera::SetFar(float far)
 {
-    this->far = vFar;
+    this->far = far;
     MarkProjectionDirty();
 }
 
-void Camera::SetNear(float vNear)
+void Camera::SetNear(float near)
 {
-    this->near = vNear;
+    this->near = near;
     MarkProjectionDirty();
 }
 
