@@ -58,8 +58,12 @@ public:
     void DeviceWaitIdle();
 
     VkInstance GetInstance() const { return instance; }
+    VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }
+    uint32_t GetQueueFamilyIndex() const { return queueFamilyIndex; }
     VkQueue GetGraphicsQueue() const { return queue; }
     VkQueue GetPresentQueue() const { return queue; }
+    VkDevice GetDevice() const { return device; }
+    uint32_t GetMinImageCount() const { return minImageCount; }
     VkExtent2D GetSwapchainExtent2D() const { return swapchainExtent2D; }
     float GetSwapchainAspectRatio() const { return swapchainExtent2D.width / swapchainExtent2D.height; }
 

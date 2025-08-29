@@ -14,6 +14,8 @@
 
 #include "rendering/camera/camera.h"
 
+#include <imgui/qk_imgui.h>
+
 struct Vertex
 {
     float pos[2];
@@ -62,6 +64,21 @@ int main()
     VkResult err = glfwCreateWindowSurface(driver->GetInstance(), hwindow, VK_NULL_HANDLE, &surface);
     assert(!err);
     driver->Initialize(surface);
+
+    ImGui_ImplVulkan_InitInfo _ImGuiVulkanInitInfo = {};
+    _ImGuiVulkanInitInfo.Instance = driver->GetInstance();
+    _ImGuiVulkanInitInfo.PhysicalDevice = driver->GetPhysicalDevice();
+    _ImGuiVulkanInitInfo.Device = driver->GetDevice();
+    _ImGuiVulkanInitInfo.QueueFamily = driver->GetQueueFamilyIndex();
+    _ImGuiVulkanInitInfo.Queue = driver->GetGraphicsQueue();
+    _ImGuiVulkanInitInfo.PipelineCache = VK_NULL_HANDLE;
+    _ImGuiVulkanInitInfo.DescriptorPool = p_initialize_info->DescriptorPool;
+    _ImGuiVulkanInitInfo.Subpass = 0;
+    _ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
+    _ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
+    _ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+    QkImGuiVulkanHInit(&_ImGuiVulkanInitInfo);
 
     Pipeline pipeline;
     driver->CreatePipeline("qk_simple_shader", &pipeline);

@@ -11,4 +11,10 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #endif
 
+#ifdef __cplusplus
+#define QK_MAYBE_UNUSED [[maybe_unused]]
+#else
+#define QK_MAYBE_UNUSED
+#endif
+
 #endif /* _TYPEDEFS_H_ */
