@@ -47,20 +47,20 @@ RenderDriver::RenderDriver()
 {
     VkResult err;
 
-#ifdef ENABLE_VOLK_LOADER
+#ifdef USE_VOLK_LOADER
     if (!volkInitialized) {
         err = volkInitialize();
         assert(!err);
         volkInitialized = true;
     }
-#endif /* ENABLE_VOLK_LOADER */
+#endif /* USE_VOLK_LOADER */
 
     err = _CreateInstance();
     assert(!err);
 
-#ifdef ENABLE_VOLK_LOADER
+#ifdef USE_VOLK_LOADER
     volkLoadInstance(instance);
-#endif /* ENABLE_VOLK_LOADER */
+#endif /* USE_VOLK_LOADER */
 
     uint32_t version = 0;
     err = vkEnumerateInstanceVersion(&version);

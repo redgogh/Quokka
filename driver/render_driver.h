@@ -1,11 +1,11 @@
 #ifndef RENDER_DRIVER_H_
 #define RENDER_DRIVER_H_
 
-#define ENABLE_VOLK_LOADER
+#define USE_VOLK_LOADER
 
-#ifdef ENABLE_VOLK_LOADER
+#ifdef USE_VOLK_LOADER
 #include <volk/volk.h>
-#endif /* ENABLE_VOLK_LOADER */
+#endif /* USE_VOLK_LOADER */
 
 #include <vma/vk_mem_alloc.h>
 #include <quokka/typedefs.h>
