@@ -24,8 +24,7 @@ void Camera::Update()
     }
 
     if (projectionDirty) {
-        projection = glm::perspective(glm::radians(fov), aspectRatio, near, far);
-        projection[1][1] *= -1;
+        projection = glm::perspectiveRH_ZO(glm::radians(fov), aspectRatio, near, far);
         UnmarkProjectionDirty();
     }
 }
