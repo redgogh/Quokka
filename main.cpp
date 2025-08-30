@@ -72,13 +72,14 @@ int main()
     _ImGuiVulkanInitInfo.QueueFamily = driver->GetQueueFamilyIndex();
     _ImGuiVulkanInitInfo.Queue = driver->GetGraphicsQueue();
     _ImGuiVulkanInitInfo.PipelineCache = VK_NULL_HANDLE;
-    _ImGuiVulkanInitInfo.DescriptorPool = p_initialize_info->DescriptorPool;
-    _ImGuiVulkanInitInfo.Subpass = 0;
+    _ImGuiVulkanInitInfo.DescriptorPool = driver->GetDescriptorPool();
+    _ImGuiVulkanInitInfo.UseDynamicRendering = VK_TRUE;
+    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     _ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
     _ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
     _ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-    QkImGuiVulkanHInit(&_ImGuiVulkanInitInfo);
+    QkImGuiVulkanHInit(hwindow, &_ImGuiVulkanInitInfo);
 
     Pipeline pipeline;
     driver->CreatePipeline("qk_simple_shader", &pipeline);
@@ -92,6 +93,8 @@ int main()
     float aspectRatio = driver->GetSwapchainAspectRatio();
     Camera camera(position, aspectRatio);
 
+    bool showDemoWindow = true;
+
     while (!glfwWindowShouldClose(hwindow)) {
         glfwPollEvents();
 
@@ -102,19 +105,29 @@ int main()
 
         VkCommandBuffer cmd;
         driver->AcquiredNextFrame(&cmd);
-
         driver->BeginCommandBuffer(cmd);
+
         driver->CmdBeginRendering(cmd);
+
         driver->CmdBindPipeline(cmd, pipeline);
         driver->CmdPushConstants(cmd, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
         driver->CmdBindVertexBuffer(cmd, vertexBuffer, 0);
         driver->CmdDraw(cmd, ARRAY_SIZE(vertices));
+
+        QkImGuiVulkanHNewFrame(cmd);
+        ImGui::ShowDemoWindow(&showDemoWindow);
+        QkImGuiVulkanHEndFrame(cmd);
+
         driver->CmdEndRendering(cmd);
+
         driver->EndCommandBuffer(cmd);
         driver->SubmitAndPresentFrame(cmd);
     }
 
     driver->DeviceWaitIdle();
+
+    QkImGuiVulkanHTerminate();
+
     driver->DestroyPipeline(pipeline);
     driver->DestroyBuffer(vertexBuffer);
 

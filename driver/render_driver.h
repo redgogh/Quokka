@@ -63,6 +63,7 @@ public:
     VkQueue GetGraphicsQueue() const { return queue; }
     VkQueue GetPresentQueue() const { return queue; }
     VkDevice GetDevice() const { return device; }
+    VkDescriptorPool GetDescriptorPool() const { return descriptorPool; }
     uint32_t GetMinImageCount() const { return minImageCount; }
     VkExtent2D GetSwapchainExtent2D() const { return swapchainExtent2D; }
     float GetSwapchainAspectRatio() const { return swapchainExtent2D.width / swapchainExtent2D.height; }
@@ -73,6 +74,7 @@ private:
     VkResult _CreateMemoryAllocator();
     VkResult _CreateSwapchain(VkSwapchainKHR oldSwapchain);
     VkResult _CreateCommandPool();
+    VkResult _CreateDescriptorPool();
     VkResult _CreateShaderModule(const char* shaderName, const char* stage, VkShaderModule* pShaderModule);
     VkResult _CreateFence(VkFence* pFence);
     VkResult _CreateSemaphore(VkSemaphore* pSemaphore);
@@ -96,6 +98,7 @@ private:
     VmaAllocator allocator = VK_NULL_HANDLE;
     VkSwapchainKHR swapchain = VK_NULL_HANDLE;
     VkCommandPool commandPool = VK_NULL_HANDLE;
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     VkFence submitFence = VK_NULL_HANDLE;
 
     // Vulkan swapchain resources

@@ -81,6 +81,7 @@ RenderDriver::~RenderDriver()
 
     _DestroyFence(submitFence);
     _DestroySyncObjects();
+    vkDestroyDescriptorPool(device, descriptorPool, VK_NULL_HANDLE);
     vkDestroyCommandPool(device, commandPool, VK_NULL_HANDLE);
     // vkDestroySwapchainKHR(device, swapchain, VK_NULL_HANDLE);
     _DestroySwapchain();
@@ -103,6 +104,9 @@ VkResult RenderDriver::Initialize(VkSurfaceKHR surface)
     VK_CHECK_ERROR(err);
 
     err = _CreateCommandPool();
+    VK_CHECK_ERROR(err);
+
+    err = _CreateDescriptorPool();
     VK_CHECK_ERROR(err);
 
     err = _CreateMemoryAllocator();
@@ -495,8 +499,6 @@ DO_MEMORY_IAMGE_BARRIER_TAG:
 
 void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer)
 {
-    vkAcquireNextImageKHR(device, swapchain, UINT32_MAX, imageAvailableSemaphores[flightIndex], VK_NULL_HANDLE, &imageIndex);
-
     VkRenderingAttachmentInfo colorRenderingAttachment = {
         .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
         .imageView = swapchainImageViews[imageIndex],
@@ -727,6 +729,8 @@ void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer)
 
     if (currentExtent2D.width != swapchainExtent2D.width || currentExtent2D.height != swapchainExtent2D.height)
         RebuildSwapchain();
+
+    vkAcquireNextImageKHR(device, swapchain, UINT32_MAX, imageAvailableSemaphores[flightIndex], VK_NULL_HANDLE, &imageIndex);
 }
 
 void RenderDriver::RebuildSwapchain()
@@ -984,6 +988,37 @@ VkResult RenderDriver::_CreateCommandPool()
     commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
 
     err = vkCreateCommandPool(device, &commandPoolCreateInfo, VK_NULL_HANDLE, &commandPool);
+    VK_CHECK_ERROR(err);
+
+    return err;
+}
+
+VkResult RenderDriver::_CreateDescriptorPool()
+{
+    VkResult err;
+
+    VkDescriptorPoolSize pool_size[] = {
+        { VK_DESCRIPTOR_TYPE_SAMPLER,                256 },
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 256 },
+        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,          256 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,          256 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,   256 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,   256 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         256 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,         256 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 256 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 256 },
+        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,       256 },
+    };
+
+    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+    descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptorPoolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    descriptorPoolCreateInfo.maxSets = 1024;
+    descriptorPoolCreateInfo.poolSizeCount = ARRAY_SIZE(pool_size);
+    descriptorPoolCreateInfo.pPoolSizes = pool_size;
+
+    err = vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, VK_NULL_HANDLE, &descriptorPool);
     VK_CHECK_ERROR(err);
 
     return err;

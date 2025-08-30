@@ -5,7 +5,7 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_vulkan.h>
 
-void QkImGuiVulkanHInit(ImGui_ImplVulkan_InitInfo* info);
+void QkImGuiVulkanHInit(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* info);
 void QkImGuiVulkanHTerminate();
 
 void QkImGuiVulkanHNewFrame([[maybe_unused]] VkCommandBuffer commandBuffer);

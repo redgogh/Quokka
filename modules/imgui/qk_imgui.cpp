@@ -2,7 +2,7 @@
 
 #include <quokka/typedefs.h>
 
-void QkImGuiVulkanHInit(ImGui_ImplVulkan_InitInfo* info)
+void QkImGuiVulkanHInit(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* info)
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -24,6 +24,7 @@ void QkImGuiVulkanHInit(ImGui_ImplVulkan_InitInfo* info)
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
+    ImGui_ImplGlfw_InitForVulkan(window, true);
     ImGui_ImplVulkan_Init(info);
 }
 
