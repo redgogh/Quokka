@@ -417,6 +417,26 @@ void RenderDriver::DestroyCommandBuffers(uint32_t count, VkCommandBuffer* pComma
     vkFreeCommandBuffers(device, commandPool, count, pCommandBuffers);
 }
 
+void RenderDriver::BeginSingleTimeCommandBuffer(VkCommandBuffer *pCommandBuffer)
+{
+    CreateCommandBuffer(pCommandBuffer);
+
+    VkCommandBufferBeginInfo commandBufferBeginInfo = {};
+    commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(*pCommandBuffer, &commandBufferBeginInfo);
+}
+
+void RenderDriver::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer)
+{
+    vkEndCommandBuffer(commandBuffer);
+    SubmitQueue(commandBuffer, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE);
+    vkQueueWaitIdle(queue);
+
+    DestroyCommandBuffers(1, &commandBuffer);
+}
+
 void RenderDriver::BeginCommandBuffer(VkCommandBuffer commandBuffer)
 {
     VkCommandBufferBeginInfo beginInfo = {};
@@ -653,7 +673,7 @@ void RenderDriver::CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBu
 {
     VkCommandBuffer commandBuffer;
     CreateCommandBuffer(&commandBuffer);
-    BeginCommandBuffer(commandBuffer);
+    BeginSingleTimeCommandBuffer(&commandBuffer);
 
     VkBufferCopy copyRegion = {};
     copyRegion.srcOffset = srcOffset;
@@ -662,9 +682,7 @@ void RenderDriver::CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBu
 
     vkCmdCopyBuffer(commandBuffer, srcBuffer->vkBuffer, dstBuffer->vkBuffer, 1, &copyRegion);
 
-    EndCommandBuffer(commandBuffer);
-    SubmitQueue(commandBuffer, VK_NULL_HANDLE, VK_NULL_HANDLE, submitFence);
-    vkWaitForFences(device, 1, &submitFence, VK_TRUE, UINT32_MAX);
+    EndSingleTimeCommandBuffer(commandBuffer);
 }
 
 void RenderDriver::WriteTexture2D(Texture2D texture, uint64_t size, void *pixels)

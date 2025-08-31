@@ -109,10 +109,10 @@ int main()
 
         driver->CmdBeginRendering(cmd);
 
-        driver->CmdBindPipeline(cmd, pipeline);
-        driver->CmdPushConstants(cmd, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
-        driver->CmdBindVertexBuffer(cmd, vertexBuffer, 0);
-        driver->CmdDraw(cmd, ARRAY_SIZE(vertices));
+        // driver->CmdBindPipeline(cmd, pipeline);
+        // driver->CmdPushConstants(cmd, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
+        // driver->CmdBindVertexBuffer(cmd, vertexBuffer, 0);
+        // driver->CmdDraw(cmd, ARRAY_SIZE(vertices));
 
         QkImGuiVulkanHNewFrame(cmd);
         ImGui::ShowDemoWindow(&showDemoWindow);

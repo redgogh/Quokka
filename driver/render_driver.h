@@ -36,6 +36,8 @@ public:
     void DestroyCommandBuffer(VkCommandBuffer commandBuffer);
     void DestroyCommandBuffers(uint32_t count, VkCommandBuffer* pCommandBuffers);
 
+    void BeginSingleTimeCommandBuffer(VkCommandBuffer* pCommandBuffer);
+    void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);
     void BeginCommandBuffer(VkCommandBuffer commandBuffer);
     void EndCommandBuffer(VkCommandBuffer commandBuffer);
     void CmdTextureMemoryBarrier(VkCommandBuffer commandBuffer, Texture2D texture, VkImageLayout newLayout);
