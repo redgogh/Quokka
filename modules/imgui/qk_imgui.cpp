@@ -2,6 +2,17 @@
 
 #include <GLFW//glfw3.h>
 #include <quokka/typedefs.h>
+#include <math.h>
+
+/*
+ * 可调节拖动平滑系数
+ *
+ * 在 ImGui DragFloat 函数隐藏鼠标拖动时，有时候会触发预期之外的 “飙数” 操作，在某一次拖动
+ * 可能导致数值增长或减小特别快，超出 v_speed 预期之外。
+ *
+ * 定义可调节拖动平滑系数可以有效解决 “飙数” 问题
+ */
+#define DRAG_SMOOTH_FACTOR 6.5f;
 
 static GLFWwindow* g_Window = nullptr;
 
@@ -122,6 +133,11 @@ bool _DragScalarN(const char *label, float *v, int v_number, float v_speed, floa
 
     bool trigger = false;
 
+    float watch[v_number];
+
+    for (int i = 0; i < v_number; i++)
+        watch[i] = v[i];
+
     ImGui::BeginGroup();
     ImGui::PushID(label);
     ImGui::Indent(32.0f);
@@ -147,6 +163,12 @@ bool _DragScalarN(const char *label, float *v, int v_number, float v_speed, floa
             ImGui::SameLine();
             if (ImGui::DragFloat("", &v[i], v_speed, v_min, v_max, format)) {
                 trigger = true;
+
+                float delta = v[i] - watch[i];
+                float max_delta = v_speed * DRAG_SMOOTH_FACTOR;
+
+                if (fabs(delta) > max_delta)
+                    v[i] = watch[i] + (delta > 0 ? max_delta : -max_delta);
             }
             _CheckDraggingCursor();
             ImGui::SameLine();
