@@ -17,7 +17,7 @@ void QkImGuiVulkanHInit(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* info)
     io.ConfigViewportsNoTaskBarIcon = true;
 
     // Set ImGui default font.
-    io.Fonts->AddFontFromFileTTF("../misc/fonts/Microsoft Yahei UI/Microsoft Yahei UI.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("../misc/fonts/Microsoft Yahei UI/Microsoft Yahei UI.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
     io.FontDefault = io.Fonts->Fonts.back();
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.

@@ -67,6 +67,10 @@ int main()
     assert(!err);
     driver->Initialize(surface);
 
+    VkFormat colorAttachmentFormats[] = {
+        driver->GetSwapchainFormat()
+    };
+
     ImGui_ImplVulkan_InitInfo _ImGuiVulkanInitInfo = {};
     _ImGuiVulkanInitInfo.Instance = driver->GetInstance();
     _ImGuiVulkanInitInfo.PhysicalDevice = driver->GetPhysicalDevice();
@@ -77,6 +81,8 @@ int main()
     _ImGuiVulkanInitInfo.DescriptorPool = driver->GetDescriptorPool();
     _ImGuiVulkanInitInfo.UseDynamicRendering = VK_TRUE;
     _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
     _ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
     _ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
     _ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;

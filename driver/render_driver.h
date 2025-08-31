@@ -69,6 +69,7 @@ public:
     uint32_t GetMinImageCount() const { return minImageCount; }
     VkExtent2D GetSwapchainExtent2D() const { return swapchainExtent2D; }
     float GetSwapchainAspectRatio() const { return swapchainExtent2D.width / swapchainExtent2D.height; }
+    VkFormat GetSwapchainFormat() const { return surfaceFormat.format; }
 
 private:
     VkResult _CreateInstance();
