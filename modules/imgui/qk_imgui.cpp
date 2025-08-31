@@ -145,8 +145,9 @@ bool _DragScalarN(const char *label, float *v, int v_number, float v_speed, floa
             ImGui::PushItemWidth(single_item_width);
             ImGui::TextColored(axis_colors[i], axis_labels[i]);
             ImGui::SameLine();
-            if (ImGui::DragFloat("", &v[i], v_speed, v_min, v_max, format))
+            if (ImGui::DragFloat("", &v[i], v_speed, v_min, v_max, format)) {
                 trigger = true;
+            }
             _CheckDraggingCursor();
             ImGui::SameLine();
             ImGui::PopItemWidth();
