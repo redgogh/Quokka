@@ -118,6 +118,15 @@ VkResult RenderDriver::Initialize(VkSurfaceKHR surface)
     err = _CreateFence(&submitFence);
     VK_CHECK_ERROR(err);
 
+    printf("[vulkan] render driver for vulkan initialized\n");
+    printf("[vulkan]   - VkInstance: %p\n", instance);
+    printf("[vulkan]   - VkPhysicalDevice: %p\n", physicalDevice);
+    printf("[vulkan]   - VkSurface: %p\n", surface);
+    printf("[vulkan]   - VkDevice: %p\n", device);
+    printf("[vulkan]   - VkCommandPool: %p\n", commandPool);
+    printf("[vulkan]   - VkDescriptorPool: %p\n", descriptorPool);
+    printf("[vulkan]   - VmaAllocator: %p\n", allocator);
+
     return err;
 }
 

@@ -47,13 +47,15 @@ int main()
     chdir(_cwd);
 #endif
 
+    setbuf(stdout, NULL);
+
     glfwInit();
 
 //    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     GLFWwindow* hwindow =
-        glfwCreateWindow(800, 600, "Quokka", nullptr, nullptr);
+        glfwCreateWindow(1480, 890, "Quokka", nullptr, nullptr);
 
     if (hwindow == nullptr)
         throw std::runtime_error("Failed to create GLFW window");
