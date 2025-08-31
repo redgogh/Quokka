@@ -114,20 +114,30 @@ int main()
         VkCommandBuffer cmd;
         driver->AcquiredNextFrame(&cmd);
         driver->BeginCommandBuffer(cmd);
-
         driver->CmdBeginRendering(cmd);
 
-        // driver->CmdBindPipeline(cmd, pipeline);
-        // driver->CmdPushConstants(cmd, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
-        // driver->CmdBindVertexBuffer(cmd, vertexBuffer, 0);
-        // driver->CmdDraw(cmd, ARRAY_SIZE(vertices));
+        {
+            QkImGuiVulkanHNewFrame(cmd);
+            ImGui::ShowDemoWindow(&showDemoWindow);
+            if (QkImGuiBegin("视口")) {
 
-        QkImGuiVulkanHNewFrame(cmd);
-        ImGui::ShowDemoWindow(&showDemoWindow);
-        QkImGuiVulkanHEndFrame(cmd);
+                if (QkImGuiDragFloat3("调试", glm::value_ptr(position), 0.01f)) {
+                    camera.SetPosition(position);
+                }
+
+                QkImGuiEnd();
+            }
+            QkImGuiVulkanHEndFrame(cmd);
+        }
+
+        {
+            driver->CmdBindPipeline(cmd, pipeline);
+            driver->CmdPushConstants(cmd, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
+            driver->CmdBindVertexBuffer(cmd, vertexBuffer, 0);
+            driver->CmdDraw(cmd, ARRAY_SIZE(vertices));
+        }
 
         driver->CmdEndRendering(cmd);
-
         driver->EndCommandBuffer(cmd);
         driver->SubmitAndPresentFrame(cmd);
     }
