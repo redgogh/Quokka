@@ -1,9 +1,9 @@
 #ifndef QK_IMGUI_H_
 #define QK_IMGUI_H_
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_vulkan.h>
+#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_vulkan.h"
 
 void QkImGuiVulkanHInit(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* info);
 void QkImGuiVulkanHTerminate();

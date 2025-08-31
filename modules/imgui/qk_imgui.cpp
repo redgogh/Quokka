@@ -1,4 +1,4 @@
-#include <qk_imgui.h>
+#include "qk_imgui/qk_imgui.h"
 
 #include <quokka/typedefs.h>
 
@@ -15,6 +15,11 @@ void QkImGuiVulkanHInit(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* info)
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
     io.ConfigViewportsNoAutoMerge = true;
     io.ConfigViewportsNoTaskBarIcon = true;
+
+    // Set ImGui default font.
+    // io.Fonts->AddFontFromFileTTF("../misc/fonts/Microsoft Yahei UI/Microsoft Yahei UI.ttf", 16.0f,
+    //                              nullptr, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+    // io.FontDefault = io.Fonts->Fonts.back();
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();

@@ -3,6 +3,10 @@ PROJECT(Quokka)
 
 SET(CMAKE_CXX_STANDARD 26)
 
+ADD_DEFINITIONS(
+  -DIMGUI_IMPL_VULKAN_USE_VOLK
+)
+
 INCLUDE_DIRECTORIES(./)
 INCLUDE_DIRECTORIES(SYSTEM "thirdparty" "include")
 
@@ -32,10 +36,10 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE
 )
 
 IF (APPLE)
-    TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE
-        "-framework Cocoa"
-        "-framework CoreFoundation"
-        "-framework IOKit"
-        "-framework CoreVideo"
-    )
+  TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE
+    "-framework Cocoa"
+    "-framework CoreFoundation"
+    "-framework IOKit"
+    "-framework CoreVideo"
+  )
 ENDIF()
