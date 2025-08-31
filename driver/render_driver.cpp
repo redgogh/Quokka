@@ -420,28 +420,23 @@ void RenderDriver::DestroyCommandBuffers(uint32_t count, VkCommandBuffer* pComma
 void RenderDriver::BeginSingleTimeCommandBuffer(VkCommandBuffer *pCommandBuffer)
 {
     CreateCommandBuffer(pCommandBuffer);
-
-    VkCommandBufferBeginInfo commandBufferBeginInfo = {};
-    commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    vkBeginCommandBuffer(*pCommandBuffer, &commandBufferBeginInfo);
+    BeginCommandBuffer(*pCommandBuffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 }
 
 void RenderDriver::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer)
 {
-    vkEndCommandBuffer(commandBuffer);
+    EndCommandBuffer(commandBuffer);
     SubmitQueue(commandBuffer, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE);
     vkQueueWaitIdle(queue);
 
     DestroyCommandBuffers(1, &commandBuffer);
 }
 
-void RenderDriver::BeginCommandBuffer(VkCommandBuffer commandBuffer)
+void RenderDriver::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags)
 {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    beginInfo.flags = flags;
 
     vkBeginCommandBuffer(commandBuffer, &beginInfo);
 }
@@ -692,8 +687,7 @@ void RenderDriver::WriteTexture2D(Texture2D texture, uint64_t size, void *pixels
     WriteBuffer(stagingBuffer, size, pixels);
 
     VkCommandBuffer commandBuffer;
-    CreateCommandBuffer(&commandBuffer);
-    BeginCommandBuffer(commandBuffer);
+    BeginSingleTimeCommandBuffer(&commandBuffer);
 
     CmdTextureMemoryBarrier(commandBuffer, texture, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
@@ -719,9 +713,7 @@ void RenderDriver::WriteTexture2D(Texture2D texture, uint64_t size, void *pixels
         1,
         &copyRegion);
 
-    EndCommandBuffer(commandBuffer);
-    SubmitQueue(commandBuffer, VK_NULL_HANDLE, VK_NULL_HANDLE, submitFence);
-    vkWaitForFences(device, 1, &submitFence, VK_TRUE, UINT32_MAX);
+    EndSingleTimeCommandBuffer(commandBuffer);
 
     DestroyBuffer(stagingBuffer);
 }

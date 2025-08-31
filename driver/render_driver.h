@@ -38,7 +38,7 @@ public:
 
     void BeginSingleTimeCommandBuffer(VkCommandBuffer* pCommandBuffer);
     void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);
-    void BeginCommandBuffer(VkCommandBuffer commandBuffer);
+    void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags = 0);
     void EndCommandBuffer(VkCommandBuffer commandBuffer);
     void CmdTextureMemoryBarrier(VkCommandBuffer commandBuffer, Texture2D texture, VkImageLayout newLayout);
     void CmdBeginRendering(VkCommandBuffer commandBuffer);
