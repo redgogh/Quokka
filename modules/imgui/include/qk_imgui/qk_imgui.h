@@ -13,6 +13,8 @@ void QkImGuiVulkanHEndFrame(VkCommandBuffer commandBuffer);
 
 bool QkImGuiBegin(const char *title, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
 void QkImGuiEnd();
+bool QkImGuiBeginViewport(const char *title);
+void QkImGuiEndViewport();
 
 // widgets
 bool QkImGuiDragFloat(const char *label, float *v, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f");
@@ -22,5 +24,8 @@ bool QkImGuiDragFloat4(const char *label, float v[4], float v_speed = 1.0f, floa
 void QkImGuiColorEdit3(const char* label, float col[3], ImGuiColorEditFlags flags = 0);
 void QkImGuiSliderFloat(const char* label, float* v, float v_min, float v_max, const char* format = "%.2f", ImGuiSliderFlags flags = 0);
 
+// vulkan
+ImTextureID QkImGuiAddTexture(VkSampler v_sampler, VkImageView v_image, VkImageLayout v_layout);
+void QkImGuiRemoveTexture(ImTextureID v_texture);
 
 #endif /* QK_IMGUI_H_ */

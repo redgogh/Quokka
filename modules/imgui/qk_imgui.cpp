@@ -275,6 +275,18 @@ void QkImGuiEnd()
     ImGui::End();
 }
 
+bool QkImGuiBeginViewport(const char *title)
+{
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    return QkImGuiBegin(title);
+}
+
+void QkImGuiEndViewport()
+{
+    QkImGuiEnd();
+    ImGui::PopStyleVar();
+}
+
 bool QkImGuiDragFloat(const char *label, float *v, float v_speed, float v_min, float v_max, const char *format)
 {
     return _DragScalarN(label, v, 1, v_speed, v_min, v_max, format);
@@ -315,4 +327,14 @@ void QkImGuiSliderFloat(const char* label, float* v, float v_min, float v_max, c
     ImGui::SliderFloat("", v, v_min, v_max, format, flags);
     ImGui::Unindent(32.0f);
     ImGui::PopID();
+}
+
+ImTextureID QkImGuiAddTexture(VkSampler v_sampler, VkImageView v_image, VkImageLayout v_layout)
+{
+    return ImGui_ImplVulkan_AddTexture(v_sampler, v_image, v_layout);
+}
+
+void QkImGuiRemoveTexture(ImTextureID v_texture)
+{
+    ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet) v_texture);
 }

@@ -103,6 +103,20 @@ int main()
 
     bool showDemoWindow = true;
 
+    // 离屏渲染
+    VkCommandBuffer v2CommandBuffer;
+    driver->CreateCommandBuffer(&v2CommandBuffer);
+
+    Texture2D v2Texture;
+    ImVec2 watchWSize(32, 32);
+    ImVec2 viewportWSize(32, 32);
+    driver->CreateTexture2D(watchWSize.x, watchWSize.y, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
+
+    VkSampler sampler;
+    driver->CreateSampler(&sampler);
+
+    ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
     while (!glfwWindowShouldClose(hwindow)) {
         glfwPollEvents();
 
@@ -110,6 +124,31 @@ int main()
 
         /* 计算 MVP 矩阵 */
         glm::mat4 PC_MVP = camera.GetProjectionMatrix() * camera.GetViewMatrix() * glm::mat4(1.0f);
+
+        if (watchWSize.x != viewportWSize.x || watchWSize.y != viewportWSize.y) {
+            watchWSize = viewportWSize;
+            camera.SetAspectRatio(watchWSize.x / watchWSize.y);
+            driver->DeviceWaitIdle();
+            QkImGuiRemoveTexture(imTextureId);
+            driver->DestroyTexture2D(v2Texture);
+            driver->CreateTexture2D(watchWSize.x, watchWSize.y, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
+            imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
+
+        driver->BeginCommandBuffer(v2CommandBuffer);
+        driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        driver->CmdBeginRenderingV2(v2CommandBuffer, v2Texture);
+
+        driver->CmdBindPipeline(v2CommandBuffer, pipeline, watchWSize.x, watchWSize.y);
+        driver->CmdPushConstants(v2CommandBuffer, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),glm::value_ptr(PC_MVP));
+        driver->CmdBindVertexBuffer(v2CommandBuffer, vertexBuffer, 0);
+        driver->CmdDraw(v2CommandBuffer, ARRAY_SIZE(vertices));
+
+        driver->CmdEndRenderingV2(v2CommandBuffer);
+        driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        driver->EndCommandBuffer(v2CommandBuffer);
+        driver->SubmitQueue(v2CommandBuffer, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE);
+        driver->DeviceWaitIdle();
 
         VkCommandBuffer cmd;
         driver->AcquiredNextFrame(&cmd);
@@ -119,22 +158,25 @@ int main()
         {
             QkImGuiVulkanHNewFrame(cmd);
             ImGui::ShowDemoWindow(&showDemoWindow);
-            if (QkImGuiBegin("视口")) {
+            if (QkImGuiBeginViewport("视口")) {
+                ImVec2 currentRegion = ImGui::GetContentRegionAvail();
+                if (viewportWSize.x != currentRegion.x && viewportWSize.y != currentRegion.y) {
+                    viewportWSize.x = currentRegion.x;
+                    viewportWSize.y = currentRegion.y;
+                }
+                ImGui::Image(imTextureId, currentRegion);
+                QkImGuiEndViewport();
+            }
 
-                if (QkImGuiDragFloat3("调试", glm::value_ptr(position), 0.01f)) {
+            if (QkImGuiBegin("调试")) {
+
+                if (QkImGuiDragFloat3("位置", glm::value_ptr(position), 0.01f)) {
                     camera.SetPosition(position);
                 }
 
                 QkImGuiEnd();
             }
             QkImGuiVulkanHEndFrame(cmd);
-        }
-
-        {
-            driver->CmdBindPipeline(cmd, pipeline);
-            driver->CmdPushConstants(cmd, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
-            driver->CmdBindVertexBuffer(cmd, vertexBuffer, 0);
-            driver->CmdDraw(cmd, ARRAY_SIZE(vertices));
         }
 
         driver->CmdEndRendering(cmd);

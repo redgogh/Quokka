@@ -43,6 +43,11 @@ struct Pipeline_T {
     VkPipelineBindPoint vkBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 };
 
+VkImageView dGetVkImageView(Texture2D texture)
+{
+    return texture->vkImageView;
+}
+
 RenderDriver::RenderDriver()
 {
     VkResult err;
@@ -217,6 +222,7 @@ VkResult RenderDriver::CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, 
     (*pTexture2D)->width = w;
     (*pTexture2D)->height = h;
     (*pTexture2D)->format = format;
+    (*pTexture2D)->layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     return err;
 }
@@ -226,6 +232,39 @@ void RenderDriver::DestroyTexture2D(Texture2D Texture2D)
     vmaDestroyImage(allocator, Texture2D->vkImage, Texture2D->allocation);
     vkDestroyImageView(device, Texture2D->vkImageView, VK_NULL_HANDLE);
     free(Texture2D);
+}
+
+VkResult RenderDriver::CreateSampler(VkSampler *pSampler)
+{
+    VkResult err;
+
+    VkSamplerCreateInfo samplerCreateInfo = {};
+    samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+    samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+    samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerCreateInfo.anisotropyEnable = VK_FALSE;
+    samplerCreateInfo.maxAnisotropy = 16;
+    samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerCreateInfo.compareEnable = VK_FALSE;
+    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerCreateInfo.mipLodBias = 0.0f;
+    samplerCreateInfo.minLod = 0.0f;
+    samplerCreateInfo.maxLod = 0.0f;
+
+    err = vkCreateSampler(device, &samplerCreateInfo, VK_NULL_HANDLE, pSampler);
+    VK_CHECK_ERROR(err);
+
+    return err;
+}
+
+void RenderDriver::DestroySampler(VkSampler sampler)
+{
+    vkDestroySampler(device, sampler, VK_NULL_HANDLE);
 }
 
 VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipeline)
@@ -488,7 +527,24 @@ void RenderDriver::CmdTextureMemoryBarrier(VkCommandBuffer commandBuffer, Textur
         goto DO_MEMORY_IAMGE_BARRIER_TAG;
     }
 
-    printf("[vulkan] error - unsupported image layout transition!");
+    if ((oldLayout == VK_IMAGE_LAYOUT_UNDEFINED || oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+        srcAccessMask = 0;
+        dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        goto DO_MEMORY_IAMGE_BARRIER_TAG;
+    }
+
+
+    if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        goto DO_MEMORY_IAMGE_BARRIER_TAG;
+    }
+
+    printf("[vulkan] error - unsupported image layout transition!\n");
     return;
 
 DO_MEMORY_IAMGE_BARRIER_TAG:
@@ -519,6 +575,38 @@ DO_MEMORY_IAMGE_BARRIER_TAG:
                          1, &barrier);
 
     texture->layout = newLayout;
+}
+
+void RenderDriver::CmdBeginRenderingV2(VkCommandBuffer commandBuffer, Texture2D texture)
+{
+    VkRenderingAttachmentInfo colorRenderingAttachment = {
+        .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+        .imageView = texture->vkImageView,
+        .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        .clearValue = {
+            .color = { 0.8f, 0.5f, 0.3f, 1.0f }
+        }
+    };
+
+    VkRenderingInfo renderingInfo = {
+        .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+        .renderArea = {
+            .offset = { 0, 0 },
+            .extent = { texture->width, texture->height }
+        },
+        .layerCount = 1,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &colorRenderingAttachment
+    };
+
+    vkCmdBeginRendering(commandBuffer, &renderingInfo);
+}
+
+void RenderDriver::CmdEndRenderingV2(VkCommandBuffer commandBuffer)
+{
+    vkCmdEndRendering(commandBuffer);
 }
 
 void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer)
@@ -577,15 +665,15 @@ void RenderDriver::CmdEndRendering(VkCommandBuffer commandBuffer)
                          1, &imageMemoryBarrier);
 }
 
-void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline)
+void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h)
 {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vkPipeline);
 
     VkViewport viewport = {
         .x = 0,
         .y = 0,
-        .width = static_cast<float>(swapchainExtent2D.width),
-        .height = static_cast<float>(swapchainExtent2D.height),
+        .width = static_cast<float>(w),
+        .height = static_cast<float>(h),
         .minDepth = 0.0f,
         .maxDepth = 1.0f
     };
@@ -594,7 +682,7 @@ void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipel
 
     VkRect2D scissor = {
         .offset = { 0, 0 },
-        .extent = swapchainExtent2D,
+        .extent = { w, h },
     };
 
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
@@ -673,6 +761,57 @@ void RenderDriver::SubmitAndPresentFrame(VkCommandBuffer commandBuffer)
     assert(!err);
 }
 
+void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer)
+{
+    flightIndex = (flightIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+
+    *pCommandBuffer = frameCommandBuffers[flightIndex];
+
+    vkWaitForFences(device, 1, &inFlightFences[flightIndex], VK_TRUE, UINT32_MAX);
+    vkResetFences(device, 1, &inFlightFences[flightIndex]);
+
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+
+    VkExtent2D currentExtent2D = capabilities.currentExtent;
+
+    if (currentExtent2D.width != swapchainExtent2D.width || currentExtent2D.height != swapchainExtent2D.height)
+        RebuildSwapchain();
+
+    vkAcquireNextImageKHR(device, swapchain, UINT32_MAX, imageAvailableSemaphores[flightIndex], VK_NULL_HANDLE, &imageIndex);
+}
+
+void RenderDriver::RebuildSwapchain()
+{
+    _CreateSwapchain(swapchain);
+}
+
+void RenderDriver::ReadBuffer(Buffer buffer, size_t size, void *data)
+{
+    void* src;
+    vmaMapMemory(allocator, buffer->allocation, &src);
+    memcpy(data, src, size);
+    vmaUnmapMemory(allocator, buffer->allocation);
+}
+
+void RenderDriver::WriteBuffer(Buffer buffer, size_t size, void *data)
+{
+    if (buffer->memoryUsage == VMA_MEMORY_USAGE_GPU_ONLY) {
+        Buffer stagingBuffer;
+        CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &stagingBuffer);
+        WriteBuffer(stagingBuffer, size, data);
+        CopyBuffer(stagingBuffer, 0, buffer, 0, size);
+        DestroyBuffer(stagingBuffer);
+        return;
+    }
+
+    /* buffer->memoryUsage != VMA_MEMORY_USAGE_GPU_ONLY */
+    void* dst;
+    vmaMapMemory(allocator, buffer->allocation, &dst);
+    memcpy(dst, data, size);
+    vmaUnmapMemory(allocator, buffer->allocation);
+}
+
 void RenderDriver::CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBuffer, uint64_t dstOffset, uint64_t size)
 {
     VkCommandBuffer commandBuffer;
@@ -732,55 +871,9 @@ void RenderDriver::DeviceWaitIdle()
     vkDeviceWaitIdle(device);
 }
 
-void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer)
+VkImageView RenderDriver::GetVkImageViewHandle(Texture2D texture) const
 {
-    flightIndex = (flightIndex + 1) % MAX_FRAMES_IN_FLIGHT;
-
-    *pCommandBuffer = frameCommandBuffers[flightIndex];
-
-    vkWaitForFences(device, 1, &inFlightFences[flightIndex], VK_TRUE, UINT32_MAX);
-    vkResetFences(device, 1, &inFlightFences[flightIndex]);
-
-    VkSurfaceCapabilitiesKHR capabilities;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
-
-    VkExtent2D currentExtent2D = capabilities.currentExtent;
-
-    if (currentExtent2D.width != swapchainExtent2D.width || currentExtent2D.height != swapchainExtent2D.height)
-        RebuildSwapchain();
-
-    vkAcquireNextImageKHR(device, swapchain, UINT32_MAX, imageAvailableSemaphores[flightIndex], VK_NULL_HANDLE, &imageIndex);
-}
-
-void RenderDriver::RebuildSwapchain()
-{
-    _CreateSwapchain(swapchain);
-}
-
-void RenderDriver::ReadBuffer(Buffer buffer, size_t size, void *data)
-{
-    void* src;
-    vmaMapMemory(allocator, buffer->allocation, &src);
-    memcpy(data, src, size);
-    vmaUnmapMemory(allocator, buffer->allocation);
-}
-
-void RenderDriver::WriteBuffer(Buffer buffer, size_t size, void *data)
-{
-    if (buffer->memoryUsage == VMA_MEMORY_USAGE_GPU_ONLY) {
-        Buffer stagingBuffer;
-        CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &stagingBuffer);
-        WriteBuffer(stagingBuffer, size, data);
-        CopyBuffer(stagingBuffer, 0, buffer, 0, size);
-        DestroyBuffer(stagingBuffer);
-        return;
-    }
-
-    /* buffer->memoryUsage != VMA_MEMORY_USAGE_GPU_ONLY */
-    void* dst;
-    vmaMapMemory(allocator, buffer->allocation, &dst);
-    memcpy(dst, data, size);
-    vmaUnmapMemory(allocator, buffer->allocation);
+    return texture->vkImageView;
 }
 
 VkResult RenderDriver::_CreateInstance()
@@ -1164,4 +1257,16 @@ VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
 
     // 默认：CPU -> GPU
     return VMA_MEMORY_USAGE_CPU_TO_GPU;
+}
+
+Texture2D RenderDriver::_WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView, VkSampler sampler)
+{
+    Texture2D wrapTexture = (Texture2D_T *) malloc(sizeof(Texture2D_T));
+    wrapTexture->width = w;
+    wrapTexture->height = h;
+    wrapTexture->vkImage = image;
+    wrapTexture->vkImageView = imageView;
+    wrapTexture->sampler = sampler;
+
+    return wrapTexture;
 }

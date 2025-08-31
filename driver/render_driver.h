@@ -18,6 +18,8 @@ typedef struct Texture2D_T *Texture2D;
 typedef struct Buffer_T *Buffer;
 typedef struct Pipeline_T *Pipeline;
 
+VkImageView dGetVkImageView(Texture2D texture);
+
 class RenderDriver
 {
 public:
@@ -30,6 +32,8 @@ public:
     void DestroyBuffer(Buffer buffer);
     VkResult CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture2D *pTexture2D);
     void DestroyTexture2D(Texture2D Texture2D);
+    VkResult CreateSampler(VkSampler* pSampler);
+    void DestroySampler(VkSampler sampler);
     VkResult CreatePipeline(const char *shaderName, Pipeline* pPipeline);
     void DestroyPipeline(Pipeline pipeline);
     VkResult CreateCommandBuffer(VkCommandBuffer* pCommandBuffer);
@@ -41,9 +45,11 @@ public:
     void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags = 0);
     void EndCommandBuffer(VkCommandBuffer commandBuffer);
     void CmdTextureMemoryBarrier(VkCommandBuffer commandBuffer, Texture2D texture, VkImageLayout newLayout);
+    void CmdBeginRenderingV2(VkCommandBuffer commandBuffer, Texture2D texture);
+    void CmdEndRenderingV2(VkCommandBuffer commandBuffer);
     void CmdBeginRendering(VkCommandBuffer commandBuffer);
     void CmdEndRendering(VkCommandBuffer commandBuffer);
-    void CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline);
+    void CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h);
     void CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset);
     void CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t count, Buffer *pBuffers, VkDeviceSize *pOffsets);
     void CmdPushConstants(VkCommandBuffer commandBuffer, Pipeline pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* data);
@@ -70,6 +76,7 @@ public:
     VkExtent2D GetSwapchainExtent2D() const { return swapchainExtent2D; }
     float GetSwapchainAspectRatio() const { return swapchainExtent2D.width / swapchainExtent2D.height; }
     VkFormat GetSwapchainFormat() const { return surfaceFormat.format; }
+    VkImageView GetVkImageViewHandle(Texture2D texture) const;
 
 private:
     VkResult _CreateInstance();
@@ -91,6 +98,7 @@ private:
     void _DestroySyncObjects();
 
     static VmaMemoryUsage _GuessMemoryUsage(VkBufferUsageFlags usage);
+    static Texture2D _WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView, VkSampler sampler);
 
     // Vulkan handles
     VkInstance instance = VK_NULL_HANDLE;
