@@ -71,10 +71,23 @@ glm::vec3 &Camera::GetPositionRef()
     return position;
 }
 
+float *Camera::GetPositionPtr()
+{
+    MarkViewDirty();
+    return glm::value_ptr(position);
+}
+
+
 glm::vec3 &Camera::GetDirectionRef()
 {
     MarkViewDirty();
     return direction;
+}
+
+float *Camera::GetDirectionPtr()
+{
+    MarkViewDirty();
+    return glm::value_ptr(direction);
 }
 
 const glm::mat4& Camera::GetProjectionMatrix() const

@@ -27,6 +27,31 @@ Vertex vertices[] = {
     {{ -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }}  // 右
 };
 
+void InitQkImGui(const std::unique_ptr<RenderDriver>& driver, const std::unique_ptr<Window>& window)
+{
+    VkFormat colorAttachmentFormats[] = {
+        driver->GetSwapchainFormat()
+    };
+
+    ImGui_ImplVulkan_InitInfo _ImGuiVulkanInitInfo = {};
+    _ImGuiVulkanInitInfo.Instance = driver->GetInstance();
+    _ImGuiVulkanInitInfo.PhysicalDevice = driver->GetPhysicalDevice();
+    _ImGuiVulkanInitInfo.Device = driver->GetDevice();
+    _ImGuiVulkanInitInfo.QueueFamily = driver->GetQueueFamilyIndex();
+    _ImGuiVulkanInitInfo.Queue = driver->GetGraphicsQueue();
+    _ImGuiVulkanInitInfo.PipelineCache = VK_NULL_HANDLE;
+    _ImGuiVulkanInitInfo.DescriptorPool = driver->GetDescriptorPool();
+    _ImGuiVulkanInitInfo.UseDynamicRendering = VK_TRUE;
+    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
+    _ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
+    _ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
+    _ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+    QkImGuiVulkanHInit(window->GetWindowHandle(), &_ImGuiVulkanInitInfo);
+}
+
 int main()
 {
 #ifdef WIN32
@@ -56,27 +81,7 @@ int main()
     assert(!err);
     driver->Initialize(surface);
 
-    VkFormat colorAttachmentFormats[] = {
-        driver->GetSwapchainFormat()
-    };
-
-    ImGui_ImplVulkan_InitInfo _ImGuiVulkanInitInfo = {};
-    _ImGuiVulkanInitInfo.Instance = driver->GetInstance();
-    _ImGuiVulkanInitInfo.PhysicalDevice = driver->GetPhysicalDevice();
-    _ImGuiVulkanInitInfo.Device = driver->GetDevice();
-    _ImGuiVulkanInitInfo.QueueFamily = driver->GetQueueFamilyIndex();
-    _ImGuiVulkanInitInfo.Queue = driver->GetGraphicsQueue();
-    _ImGuiVulkanInitInfo.PipelineCache = VK_NULL_HANDLE;
-    _ImGuiVulkanInitInfo.DescriptorPool = driver->GetDescriptorPool();
-    _ImGuiVulkanInitInfo.UseDynamicRendering = VK_TRUE;
-    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
-    _ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
-    _ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
-    _ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-
-    QkImGuiVulkanHInit(window->GetWindowHandle(), &_ImGuiVulkanInitInfo);
+    InitQkImGui(driver, window);
 
     Pipeline pipeline;
     driver->CreatePipeline("qk_simple_shader", &pipeline);
@@ -162,10 +167,8 @@ int main()
             }
 
             if (QkImGuiBegin("调试")) {
-
-                QkImGuiDragFloat3("位置", glm::value_ptr(camera.GetPositionRef()), 0.01f);
-                QkImGuiDragFloat3("方向", glm::value_ptr(camera.GetDirectionRef()), 0.01f);
-
+                QkImGuiDragFloat3("位置", camera.GetPositionPtr(), 0.01f);
+                QkImGuiDragFloat3("方向", camera.GetDirectionPtr(), 0.01f);
                 QkImGuiEnd();
             }
             QkImGuiVulkanHEndFrame(cmd);

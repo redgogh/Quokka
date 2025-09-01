@@ -19,7 +19,9 @@ public:
     void SetFar(float far);
 
     glm::vec3& GetPositionRef();
+    float* GetPositionPtr();
     glm::vec3& GetDirectionRef();
+    float* GetDirectionPtr();
     const glm::mat4& GetViewMatrix() const;
     const glm::mat4& GetProjectionMatrix() const;
 
