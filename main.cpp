@@ -1,7 +1,6 @@
 #include <memory>
 #include "driver/render_driver.h"
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "platform/glfw3/window.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -49,21 +48,11 @@ int main()
 
     setbuf(stdout, NULL);
 
-    glfwInit();
-
-//    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    GLFWwindow* hwindow =
-        glfwCreateWindow(1480, 890, "Quokka", nullptr, nullptr);
-
-    if (hwindow == nullptr)
-        throw std::runtime_error("Failed to create GLFW window");
-
+    const std::unique_ptr<Window> window = std::make_unique<Window>("Quokka", 1450, 850);
     const std::unique_ptr<RenderDriver> driver = std::make_unique<RenderDriver>();
 
     VkSurfaceKHR surface = VK_NULL_HANDLE;
-    VkResult err = glfwCreateWindowSurface(driver->GetInstance(), hwindow, VK_NULL_HANDLE, &surface);
+    VkResult err = window->CreateWindowSurface(driver->GetInstance(), VK_NULL_HANDLE, &surface);
     assert(!err);
     driver->Initialize(surface);
 
@@ -87,7 +76,7 @@ int main()
     _ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
     _ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-    QkImGuiVulkanHInit(hwindow, &_ImGuiVulkanInitInfo);
+    QkImGuiVulkanHInit(window->GetWindowHandle(), &_ImGuiVulkanInitInfo);
 
     Pipeline pipeline;
     driver->CreatePipeline("qk_simple_shader", &pipeline);
@@ -119,7 +108,7 @@ int main()
 
     ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    while (!glfwWindowShouldClose(hwindow)) {
+    while (!window->ShouldClose()) {
         glfwPollEvents();
 
         camera.Update();
@@ -197,9 +186,6 @@ int main()
     driver->DestroySampler(sampler);
     driver->DestroyPipeline(pipeline);
     driver->DestroyBuffer(vertexBuffer);
-
-    glfwDestroyWindow(hwindow);
-    glfwTerminate();
 
     return 0;
 }
