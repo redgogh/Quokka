@@ -84,7 +84,7 @@ RenderDriver::~RenderDriver()
 {
     vkDeviceWaitIdle(device);
 
-    _DestroyFence(submitFence);
+    DestroyFence(submitFence);
     _DestroySyncObjects();
     vkDestroyDescriptorPool(device, descriptorPool, VK_NULL_HANDLE);
     vkDestroyCommandPool(device, commandPool, VK_NULL_HANDLE);
@@ -120,7 +120,7 @@ VkResult RenderDriver::Initialize(VkSurfaceKHR surface)
     err = _InitSyncObjects();
     VK_CHECK_ERROR(err);
 
-    err = _CreateFence(&submitFence);
+    err = CreateFence(&submitFence);
     VK_CHECK_ERROR(err);
 
     printf("[vulkan] render driver for vulkan initialized\n");
@@ -465,6 +465,43 @@ void RenderDriver::DestroyCommandBuffers(uint32_t count, VkCommandBuffer* pComma
     vkFreeCommandBuffers(device, commandPool, count, pCommandBuffers);
 }
 
+VkResult RenderDriver::CreateFence(VkFence *pFence)
+{
+    VkResult err;
+
+    VkFenceCreateInfo fenceCreateInfo = {};
+    fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    err = vkCreateFence(device, &fenceCreateInfo, VK_NULL_HANDLE, pFence);
+    VK_CHECK_ERROR(err);
+
+    return err;
+}
+
+void RenderDriver::DestroyFence(VkFence fence)
+{
+    vkDestroyFence(device, fence, VK_NULL_HANDLE);
+}
+
+VkResult RenderDriver::CreateSemaphore(VkSemaphore *pSemaphore)
+{
+    VkResult err;
+
+    VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+    semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    err = vkCreateSemaphore(device, &semaphoreCreateInfo, VK_NULL_HANDLE, pSemaphore);
+    VK_CHECK_ERROR(err);
+
+    return err;
+}
+
+void RenderDriver::DestroySemaphore(VkSemaphore semaphore)
+{
+    vkDestroySemaphore(device, semaphore, VK_NULL_HANDLE);
+}
+
 void RenderDriver::BeginSingleTimeCommandBuffer(VkCommandBuffer *pCommandBuffer)
 {
     CreateCommandBuffer(pCommandBuffer);
@@ -474,7 +511,7 @@ void RenderDriver::BeginSingleTimeCommandBuffer(VkCommandBuffer *pCommandBuffer)
 void RenderDriver::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer)
 {
     EndCommandBuffer(commandBuffer);
-    SubmitQueue(commandBuffer, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE);
+    SubmitQueue(commandBuffer, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, VK_NULL_HANDLE);
     vkQueueWaitIdle(queue);
 
     DestroyCommandBuffers(1, &commandBuffer);
@@ -666,7 +703,12 @@ void RenderDriver::CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount)
     vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
 }
 
-void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, VkSemaphore waitSemaphore, VkSemaphore signalSemaphore, VkFence fence)
+void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, VkFence fence)
+{
+    SubmitQueue(commandBuffer, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, fence);
+}
+
+void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, uint32_t signalSemaphoreCount, const VkSemaphore* pSignalSemaphores, VkFence fence)
 {
     VkResult err;
 
@@ -676,16 +718,16 @@ void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, VkSemaphore waitSe
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    if (waitSemaphore != VK_NULL_HANDLE) {
+    if (waitSemaphoreCount > 0) {
         VkPipelineStageFlags pipelineStageFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &waitSemaphore;
+        submitInfo.waitSemaphoreCount = waitSemaphoreCount;
+        submitInfo.pWaitSemaphores = pWaitSemaphores;
         submitInfo.pWaitDstStageMask = pipelineStageFlags;
     }
 
-    if (signalSemaphore != VK_NULL_HANDLE) {
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &signalSemaphore;
+    if (signalSemaphoreCount > 0) {
+        submitInfo.signalSemaphoreCount = signalSemaphoreCount;
+        submitInfo.pSignalSemaphores = pSignalSemaphores;
     }
 
     submitInfo.commandBufferCount = 1;
@@ -695,11 +737,21 @@ void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, VkSemaphore waitSe
     assert(!err);
 }
 
-void RenderDriver::SubmitAndPresentFrame(VkCommandBuffer commandBuffer)
+void RenderDriver::SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores)
 {
     VkResult err;
 
-    SubmitQueue(commandBuffer, imageAvailableSemaphores[flightIndex], renderFinishedSemaphores[imageIndex], inFlightFences[flightIndex]);
+    std::vector<VkSemaphore> waitSemaphores = {
+        imageAvailableSemaphores[flightIndex]
+    };
+
+    for (uint32_t i = 0; i < waitSemaphoreCount; i++)
+        waitSemaphores.push_back(pWaitSemaphores[i]);
+
+    SubmitQueue(commandBuffer,
+        std::size(waitSemaphores), std::data(waitSemaphores),
+        1, &renderFinishedSemaphores[imageIndex],
+        inFlightFences[flightIndex]);
 
     VkPresentInfoKHR presentInfo = {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -823,6 +875,16 @@ void RenderDriver::WriteTexture2D(Texture2D texture, uint64_t size, void *pixels
 void RenderDriver::DeviceWaitIdle()
 {
     vkDeviceWaitIdle(device);
+}
+
+void RenderDriver::QueueWaitIdle()
+{
+    vkQueueWaitIdle(queue);
+}
+
+void RenderDriver::WaitForFences(uint32_t count, const VkFence *pFences)
+{
+    vkWaitForFences(device, count, pFences, VK_TRUE, UINT64_MAX);
 }
 
 VkImageView RenderDriver::GetVkImageViewHandle(Texture2D texture) const
@@ -1039,7 +1101,7 @@ VkResult RenderDriver::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
 
         swapchainTextures[i] = _WrapTexture2D(swapchainExtent2D.width, swapchainExtent2D.height, swapchainImage, imageView); // NOLINT
 
-        err = _CreateSemaphore(&renderFinishedSemaphores[i]);
+        err = CreateSemaphore(&renderFinishedSemaphores[i]);
         VK_CHECK_ERROR(err);
     }
 
@@ -1117,53 +1179,16 @@ VkResult RenderDriver::_CreateShaderModule(const char* shaderName, const char* s
     return err;
 }
 
-VkResult RenderDriver::_CreateFence(VkFence *pFence)
-{
-    VkResult err;
-
-    VkFenceCreateInfo fenceCreateInfo = {};
-    fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    err = vkCreateFence(device, &fenceCreateInfo, VK_NULL_HANDLE, pFence);
-    VK_CHECK_ERROR(err);
-
-    return err;
-}
-
-VkResult RenderDriver::_CreateSemaphore(VkSemaphore *pSemaphore)
-{
-    VkResult err;
-
-    VkSemaphoreCreateInfo semaphoreCreateInfo = {};
-    semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-    err = vkCreateSemaphore(device, &semaphoreCreateInfo, VK_NULL_HANDLE, pSemaphore);
-    VK_CHECK_ERROR(err);
-
-    return err;
-}
-
 void RenderDriver::_DestroySwapchain()
 {
     for (uint32_t i = 0; i < minImageCount; i++) {
         vkDestroyImageView(device, swapchainTextures[i]->vkImageView, VK_NULL_HANDLE);
         free(swapchainTextures[i]);
-        _DestroySemaphore(renderFinishedSemaphores[i]);
+        DestroySemaphore(renderFinishedSemaphores[i]);
     }
 
     swapchainTextures.clear();
     vkDestroySwapchainKHR(device, swapchain, VK_NULL_HANDLE);
-}
-
-void RenderDriver::_DestroyFence(VkFence fence)
-{
-    vkDestroyFence(device, fence, VK_NULL_HANDLE);
-}
-
-void RenderDriver::_DestroySemaphore(VkSemaphore semaphore)
-{
-    vkDestroySemaphore(device, semaphore, VK_NULL_HANDLE);
 }
 
 VkResult RenderDriver::_InitSyncObjects()
@@ -1178,10 +1203,10 @@ VkResult RenderDriver::_InitSyncObjects()
         err = CreateCommandBuffer(&frameCommandBuffers[i]);
         VK_CHECK_ERROR(err);
 
-        err = _CreateFence(&inFlightFences[i]);
+        err = CreateFence(&inFlightFences[i]);
         VK_CHECK_ERROR(err);
 
-        err = _CreateSemaphore(&imageAvailableSemaphores[i]);
+        err = CreateSemaphore(&imageAvailableSemaphores[i]);
         VK_CHECK_ERROR(err);
     }
 
@@ -1193,8 +1218,8 @@ void RenderDriver::_DestroySyncObjects()
     DestroyCommandBuffers(MAX_FRAMES_IN_FLIGHT, std::data(frameCommandBuffers));
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-        _DestroyFence(inFlightFences[i]);
-        _DestroySemaphore(imageAvailableSemaphores[i]);
+        DestroyFence(inFlightFences[i]);
+        DestroySemaphore(imageAvailableSemaphores[i]);
     }
 }
 

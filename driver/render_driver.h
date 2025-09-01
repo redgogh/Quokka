@@ -39,6 +39,10 @@ public:
     VkResult CreateCommandBuffer(VkCommandBuffer* pCommandBuffer);
     void DestroyCommandBuffer(VkCommandBuffer commandBuffer);
     void DestroyCommandBuffers(uint32_t count, VkCommandBuffer* pCommandBuffers);
+    VkResult CreateFence(VkFence* pFence);
+    void DestroyFence(VkFence fence);
+    VkResult CreateSemaphore(VkSemaphore* pSemaphore);
+    void DestroySemaphore(VkSemaphore semaphore);
 
     void BeginSingleTimeCommandBuffer(VkCommandBuffer* pCommandBuffer);
     void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);
@@ -52,8 +56,9 @@ public:
     void CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t count, Buffer *pBuffers, VkDeviceSize *pOffsets);
     void CmdPushConstants(VkCommandBuffer commandBuffer, Pipeline pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* data);
     void CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount);
-    void SubmitQueue(VkCommandBuffer commandBuffer, VkSemaphore waitSemaphore, VkSemaphore signalSemaphore, VkFence fence);
-    void SubmitAndPresentFrame(VkCommandBuffer commandBuffer);
+    void SubmitQueue(VkCommandBuffer commandBuffer, VkFence fence);
+    void SubmitQueue(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, uint32_t signalSemaphoreCount, const VkSemaphore* pSignalSemaphores, VkFence fence);
+    void SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores);
 
     void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture2D* pTexture);
     void RebuildSwapchain();
@@ -62,6 +67,8 @@ public:
     void CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBuffer, uint64_t dstOffset, uint64_t size);
     void WriteTexture2D(Texture2D texture, uint64_t size, void* pixels);
     void DeviceWaitIdle();
+    void QueueWaitIdle();
+    void WaitForFences(uint32_t count, const VkFence* pFences);
 
     VkInstance GetInstance() const { return instance; }
     VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }
@@ -84,12 +91,9 @@ private:
     VkResult _CreateCommandPool();
     VkResult _CreateDescriptorPool();
     VkResult _CreateShaderModule(const char* shaderName, const char* stage, VkShaderModule* pShaderModule);
-    VkResult _CreateFence(VkFence* pFence);
-    VkResult _CreateSemaphore(VkSemaphore* pSemaphore);
 
     void _DestroySwapchain();
-    void _DestroyFence(VkFence fence);
-    void _DestroySemaphore(VkSemaphore semaphore);
+
 
     VkResult _InitSyncObjects();
 

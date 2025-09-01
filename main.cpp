@@ -115,6 +115,9 @@ int main()
     VkSampler sampler;
     driver->CreateSampler(&sampler);
 
+    VkFence drawFence;
+    driver->CreateFence(&drawFence);
+
     ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     while (!glfwWindowShouldClose(hwindow)) {
@@ -147,8 +150,8 @@ int main()
         driver->CmdEndRendering(v2CommandBuffer);
         driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         driver->EndCommandBuffer(v2CommandBuffer);
-        driver->SubmitQueue(v2CommandBuffer, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE);
-        driver->DeviceWaitIdle();
+        driver->SubmitQueue(v2CommandBuffer, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, drawFence);
+        driver->WaitForFences(1, &drawFence);
 
         VkCommandBuffer cmd;
         Texture2D swapChainTexture;
@@ -184,13 +187,14 @@ int main()
         driver->CmdEndRendering(cmd);
         driver->CmdTextureMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
         driver->EndCommandBuffer(cmd);
-        driver->SubmitAndPresentFrame(cmd);
+        driver->SubmitAndPresentFrame(cmd, 0, VK_NULL_HANDLE);
     }
 
     driver->DeviceWaitIdle();
 
     QkImGuiVulkanHTerminate();
 
+    driver->DestroyFence(drawFence);
     driver->DestroyTexture2D(v2Texture);
     driver->DestroySampler(sampler);
     driver->DestroyPipeline(pipeline);
