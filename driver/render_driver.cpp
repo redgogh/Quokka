@@ -565,7 +565,7 @@ void RenderDriver::CmdTextureMemoryBarrier(VkCommandBuffer commandBuffer, Textur
     }
 
     if ((oldLayout == VK_IMAGE_LAYOUT_UNDEFINED || oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        || VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+        || oldLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
         srcAccessMask = 0;
         dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         srcStageMask = (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED) ?
