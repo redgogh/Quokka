@@ -137,23 +137,25 @@ int main()
 
         driver->BeginCommandBuffer(v2CommandBuffer);
         driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-        driver->CmdBeginRenderingV2(v2CommandBuffer, v2Texture);
+        driver->CmdBeginRendering(v2CommandBuffer, v2Texture);
 
         driver->CmdBindPipeline(v2CommandBuffer, pipeline, watchWSize.x, watchWSize.y);
         driver->CmdPushConstants(v2CommandBuffer, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),glm::value_ptr(PC_MVP));
         driver->CmdBindVertexBuffer(v2CommandBuffer, vertexBuffer, 0);
         driver->CmdDraw(v2CommandBuffer, ARRAY_SIZE(vertices));
 
-        driver->CmdEndRenderingV2(v2CommandBuffer);
+        driver->CmdEndRendering(v2CommandBuffer);
         driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         driver->EndCommandBuffer(v2CommandBuffer);
         driver->SubmitQueue(v2CommandBuffer, VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE);
         driver->DeviceWaitIdle();
 
         VkCommandBuffer cmd;
-        driver->AcquiredNextFrame(&cmd);
+        Texture2D swapChainTexture;
+        driver->AcquiredNextFrame(&cmd, &swapChainTexture);
         driver->BeginCommandBuffer(cmd);
-        driver->CmdBeginRendering(cmd);
+        driver->CmdTextureMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        driver->CmdBeginRendering(cmd, swapChainTexture);
 
         {
             QkImGuiVulkanHNewFrame(cmd);
@@ -180,6 +182,7 @@ int main()
         }
 
         driver->CmdEndRendering(cmd);
+        driver->CmdTextureMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
         driver->EndCommandBuffer(cmd);
         driver->SubmitAndPresentFrame(cmd);
     }
@@ -188,6 +191,8 @@ int main()
 
     QkImGuiVulkanHTerminate();
 
+    driver->DestroyTexture2D(v2Texture);
+    driver->DestroySampler(sampler);
     driver->DestroyPipeline(pipeline);
     driver->DestroyBuffer(vertexBuffer);
 

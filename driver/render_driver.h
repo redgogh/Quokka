@@ -45,9 +45,7 @@ public:
     void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags = 0);
     void EndCommandBuffer(VkCommandBuffer commandBuffer);
     void CmdTextureMemoryBarrier(VkCommandBuffer commandBuffer, Texture2D texture, VkImageLayout newLayout);
-    void CmdBeginRenderingV2(VkCommandBuffer commandBuffer, Texture2D texture);
-    void CmdEndRenderingV2(VkCommandBuffer commandBuffer);
-    void CmdBeginRendering(VkCommandBuffer commandBuffer);
+    void CmdBeginRendering(VkCommandBuffer commandBuffer, Texture2D texture);
     void CmdEndRendering(VkCommandBuffer commandBuffer);
     void CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h);
     void CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset);
@@ -57,7 +55,7 @@ public:
     void SubmitQueue(VkCommandBuffer commandBuffer, VkSemaphore waitSemaphore, VkSemaphore signalSemaphore, VkFence fence);
     void SubmitAndPresentFrame(VkCommandBuffer commandBuffer);
 
-    void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer);
+    void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture2D* pTexture);
     void RebuildSwapchain();
     void ReadBuffer(Buffer buffer, size_t size, void* data);
     void WriteBuffer(Buffer buffer, size_t size, void* data);
@@ -98,7 +96,7 @@ private:
     void _DestroySyncObjects();
 
     static VmaMemoryUsage _GuessMemoryUsage(VkBufferUsageFlags usage);
-    static Texture2D _WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView, VkSampler sampler);
+    static Texture2D _WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView);
 
     // Vulkan handles
     VkInstance instance = VK_NULL_HANDLE;
@@ -114,8 +112,7 @@ private:
 
     // Vulkan swapchain resources
     uint32_t minImageCount = 0;
-    std::vector<VkImage> swapchainImages;
-    std::vector<VkImageView> swapchainImageViews;
+    std::vector<Texture2D> swapchainTextures;
     VkExtent2D swapchainExtent2D = {};
     uint32_t imageIndex = 0;
     std::vector<VkSemaphore> renderFinishedSemaphores;

@@ -527,14 +527,23 @@ void RenderDriver::CmdTextureMemoryBarrier(VkCommandBuffer commandBuffer, Textur
         goto DO_MEMORY_IAMGE_BARRIER_TAG;
     }
 
-    if ((oldLayout == VK_IMAGE_LAYOUT_UNDEFINED || oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+    if ((oldLayout == VK_IMAGE_LAYOUT_UNDEFINED || oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        || VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
         srcAccessMask = 0;
         dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        srcStageMask = (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED) ?
+                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT : VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         goto DO_MEMORY_IAMGE_BARRIER_TAG;
     }
 
+    if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+        srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dstAccessMask = 0;
+        srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        goto DO_MEMORY_IAMGE_BARRIER_TAG;
+    }
 
     if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
         srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -577,7 +586,7 @@ DO_MEMORY_IAMGE_BARRIER_TAG:
     texture->layout = newLayout;
 }
 
-void RenderDriver::CmdBeginRenderingV2(VkCommandBuffer commandBuffer, Texture2D texture)
+void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer, Texture2D texture)
 {
     VkRenderingAttachmentInfo colorRenderingAttachment = {
         .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -586,7 +595,7 @@ void RenderDriver::CmdBeginRenderingV2(VkCommandBuffer commandBuffer, Texture2D 
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
         .clearValue = {
-            .color = { 0.8f, 0.5f, 0.3f, 1.0f }
+            .color = { 0.0f, 0.0f, 0.0f, 1.0f }
         }
     };
 
@@ -604,65 +613,9 @@ void RenderDriver::CmdBeginRenderingV2(VkCommandBuffer commandBuffer, Texture2D 
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
 }
 
-void RenderDriver::CmdEndRenderingV2(VkCommandBuffer commandBuffer)
-{
-    vkCmdEndRendering(commandBuffer);
-}
-
-void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer)
-{
-    VkRenderingAttachmentInfo colorRenderingAttachment = {
-        .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-        .imageView = swapchainImageViews[imageIndex],
-        .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-        .clearValue = {
-            .color = { 0.0f, 0.0f, 0.0f, 1.0f }
-        }
-    };
-
-    VkRenderingInfo renderingInfo = {
-        .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-        .renderArea = {
-            .offset = { 0, 0 },
-            .extent = swapchainExtent2D
-        },
-        .layerCount = 1,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &colorRenderingAttachment
-    };
-
-    vkCmdBeginRendering(commandBuffer, &renderingInfo);
-}
-
 void RenderDriver::CmdEndRendering(VkCommandBuffer commandBuffer)
 {
     vkCmdEndRendering(commandBuffer);
-
-    VkImageMemoryBarrier imageMemoryBarrier = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        .dstAccessMask = 0,
-        .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-        .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-        .image = swapchainImages[imageIndex],
-        .subresourceRange = {
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .baseMipLevel = 0,
-            .levelCount = 1,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        }
-    };
-
-    vkCmdPipelineBarrier(commandBuffer,
-                         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                         0,
-                         0, VK_NULL_HANDLE,
-                         0, VK_NULL_HANDLE,
-                         1, &imageMemoryBarrier);
 }
 
 void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h)
@@ -761,7 +714,7 @@ void RenderDriver::SubmitAndPresentFrame(VkCommandBuffer commandBuffer)
     assert(!err);
 }
 
-void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer)
+void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture2D* pTexture)
 {
     flightIndex = (flightIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
@@ -779,6 +732,7 @@ void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer)
         RebuildSwapchain();
 
     vkAcquireNextImageKHR(device, swapchain, UINT32_MAX, imageAvailableSemaphores[flightIndex], VK_NULL_HANDLE, &imageIndex);
+    *pTexture = swapchainTextures[imageIndex];
 }
 
 void RenderDriver::RebuildSwapchain()
@@ -1052,10 +1006,10 @@ VkResult RenderDriver::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
     err = vkGetSwapchainImagesKHR(device, swapchain, &minImageCount, nullptr);
     VK_CHECK_ERROR(err);
 
-    swapchainImages.resize(minImageCount);
-    swapchainImageViews.resize(minImageCount);
+    swapchainTextures.resize(minImageCount);
     renderFinishedSemaphores.resize(minImageCount);
-    
+
+    std::vector<VkImage> swapchainImages(minImageCount);
     err = vkGetSwapchainImagesKHR(device, swapchain, &minImageCount, std::data(swapchainImages));
     VK_CHECK_ERROR(err);
 
@@ -1079,8 +1033,11 @@ VkResult RenderDriver::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
         imageViewCreateInfo.subresourceRange.layerCount = 1;
         imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
-        err = vkCreateImageView(device, &imageViewCreateInfo, VK_NULL_HANDLE, &swapchainImageViews[i]);
+        VkImageView imageView = VK_NULL_HANDLE;
+        err = vkCreateImageView(device, &imageViewCreateInfo, VK_NULL_HANDLE, &imageView);
         VK_CHECK_ERROR(err);
+
+        swapchainTextures[i] = _WrapTexture2D(swapchainExtent2D.width, swapchainExtent2D.height, swapchainImage, imageView); // NOLINT
 
         err = _CreateSemaphore(&renderFinishedSemaphores[i]);
         VK_CHECK_ERROR(err);
@@ -1190,12 +1147,12 @@ VkResult RenderDriver::_CreateSemaphore(VkSemaphore *pSemaphore)
 void RenderDriver::_DestroySwapchain()
 {
     for (uint32_t i = 0; i < minImageCount; i++) {
-        vkDestroyImageView(device, swapchainImageViews[i], VK_NULL_HANDLE);
+        vkDestroyImageView(device, swapchainTextures[i]->vkImageView, VK_NULL_HANDLE);
+        free(swapchainTextures[i]);
         _DestroySemaphore(renderFinishedSemaphores[i]);
     }
 
-    swapchainImages.clear();
-    swapchainImageViews.clear();
+    swapchainTextures.clear();
     vkDestroySwapchainKHR(device, swapchain, VK_NULL_HANDLE);
 }
 
@@ -1259,14 +1216,15 @@ VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
     return VMA_MEMORY_USAGE_CPU_TO_GPU;
 }
 
-Texture2D RenderDriver::_WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView, VkSampler sampler)
+Texture2D RenderDriver::_WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
 {
-    Texture2D wrapTexture = (Texture2D_T *) malloc(sizeof(Texture2D_T));
+    Texture2D wrapTexture = static_cast<Texture2D_T*>(malloc(sizeof(Texture2D_T))); // NOLINT
+    memset(wrapTexture, 0, sizeof(Texture2D_T));
     wrapTexture->width = w;
     wrapTexture->height = h;
     wrapTexture->vkImage = image;
     wrapTexture->vkImageView = imageView;
-    wrapTexture->sampler = sampler;
+    wrapTexture->sampler = VK_NULL_HANDLE;
 
     return wrapTexture;
 }
