@@ -92,7 +92,7 @@ void QkImGuiSetDarkNavUITheme()
     style.WindowBorderSize                  = 1;
     style.ChildBorderSize                   = 1;
     style.PopupBorderSize                   = 1;
-    style.FrameBorderSize                   = 1;
+    style.FrameBorderSize                   = 0;
     style.TabBorderSize                     = 1;
     style.WindowRounding                    = 7;
     style.ChildRounding                     = 4;
@@ -278,13 +278,14 @@ void QkImGuiEnd()
 bool QkImGuiBeginViewport(const char *title)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
     return QkImGuiBegin(title);
 }
 
 void QkImGuiEndViewport()
 {
     QkImGuiEnd();
-    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
 }
 
 bool QkImGuiDragFloat(const char *label, float *v, float v_speed, float v_min, float v_max, const char *format)
