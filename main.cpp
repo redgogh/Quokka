@@ -97,9 +97,8 @@ int main()
     driver->CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &vertexBuffer);
     driver->WriteBuffer(vertexBuffer, vertexBufferSize, vertices);
 
-    glm::vec3 position(0.0f, 0.0f, 3.0f);
     float aspectRatio = driver->GetSwapchainAspectRatio();
-    Camera camera(position, aspectRatio);
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), aspectRatio);
 
     bool showDemoWindow = true;
 
@@ -175,9 +174,8 @@ int main()
 
             if (QkImGuiBegin("调试")) {
 
-                if (QkImGuiDragFloat3("位置", glm::value_ptr(position), 0.01f)) {
-                    camera.SetPosition(position);
-                }
+                QkImGuiDragFloat3("位置", glm::value_ptr(camera.GetPositionRef()), 0.01f);
+                QkImGuiDragFloat3("方向", glm::value_ptr(camera.GetDirectionRef()), 0.01f);
 
                 QkImGuiEnd();
             }

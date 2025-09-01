@@ -65,6 +65,18 @@ void Camera::SetNear(float near)
     MarkProjectionDirty();
 }
 
+glm::vec3 &Camera::GetPositionRef()
+{
+    MarkViewDirty();
+    return position;
+}
+
+glm::vec3 &Camera::GetDirectionRef()
+{
+    MarkViewDirty();
+    return direction;
+}
+
 const glm::mat4& Camera::GetProjectionMatrix() const
 {
     return projection;
@@ -74,4 +86,3 @@ const glm::mat4& Camera::GetViewMatrix() const
 {
     return view;
 }
-

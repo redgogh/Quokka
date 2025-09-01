@@ -18,6 +18,8 @@ public:
     void SetNear(float near);
     void SetFar(float far);
 
+    glm::vec3& GetPositionRef();
+    glm::vec3& GetDirectionRef();
     const glm::mat4& GetViewMatrix() const;
     const glm::mat4& GetProjectionMatrix() const;
 
