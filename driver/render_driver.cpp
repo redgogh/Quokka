@@ -411,10 +411,12 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     dynamicStateCreateInfo.pDynamicStates = &dynamicStates[0];
 
     /* dynamic rendering */
+    VkFormat formatArr[] = { VK_FORMAT_B8G8R8A8_UNORM };
+
     VkPipelineRenderingCreateInfo pipelineRenderingInfo = {};
     pipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-    pipelineRenderingInfo.colorAttachmentCount = 1;
-    pipelineRenderingInfo.pColorAttachmentFormats = &surfaceFormat.format;
+    pipelineRenderingInfo.colorAttachmentCount = ARRAY_SIZE(formatArr);
+    pipelineRenderingInfo.pColorAttachmentFormats = formatArr;
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
     pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -444,6 +446,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     ret->vkDescriptorSetLayout = descriptorSetLayout;
     ret->vkDescriptorSet = descriptorSet;
     ret->vkPipelineLayout = pipelineLayout;
+    ret->vkBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     *pPipeline = ret;
 
     return err;
@@ -692,7 +695,7 @@ void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer, Texture2D te
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
         .clearValue = {
-            .color = { 0.0f, 0.0f, 0.0f, 1.0f }
+            .color = { 0.2f, 0.2f, 0.2f, 1.0f }
         }
     };
 
@@ -757,6 +760,11 @@ void RenderDriver::CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t 
     vkCmdBindVertexBuffers(commandBuffer, 0, count, std::data(buffers), pOffsets);
 }
 
+void RenderDriver::CmdBindIndexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, uint32_t offset)
+{
+    vkCmdBindIndexBuffer(commandBuffer, buffer->vkBuffer, 0, VK_INDEX_TYPE_UINT32);
+}
+
 void RenderDriver::CmdPushConstants(VkCommandBuffer commandBuffer, Pipeline pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void *data)
 {
     vkCmdPushConstants(commandBuffer, pipeline->vkPipelineLayout, stageFlags, offset, size, data);
@@ -765,6 +773,11 @@ void RenderDriver::CmdPushConstants(VkCommandBuffer commandBuffer, Pipeline pipe
 void RenderDriver::CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount)
 {
     vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+}
+
+void RenderDriver::CmdDrawIndexed(VkCommandBuffer commandBuffer, uint32_t indexCount)
+{
+    vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
 }
 
 void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, VkFence fence)

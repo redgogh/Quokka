@@ -22,9 +22,15 @@ struct Vertex {
 };
 
 Vertex vertices[] = {
-    {{  0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.5f, 0.0f }}, // 上
-    {{  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }}, // 左
-    {{ -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }}  // 右
+    {{ -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }}, // 左下
+    {{  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f }}, // 右下
+    {{  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f }}, // 右上
+    {{ -0.5f,  0.5f }, { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f }}  // 左上
+};
+
+uint32_t indices[] = {
+    0, 1, 2, // 第一个三角形
+    2, 3, 0  // 第二个三角形
 };
 
 void InitQkImGui(const std::unique_ptr<RenderDriver>& driver, const std::unique_ptr<Window>& window)
@@ -91,6 +97,11 @@ int main()
     driver->CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &vertexBuffer);
     driver->WriteBuffer(vertexBuffer, vertexBufferSize, vertices);
 
+    Buffer indexBuffer;
+    size_t indexBufferSize = sizeof(indices);
+    driver->CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &indexBuffer);
+    driver->WriteBuffer(indexBuffer, indexBufferSize, indices);
+
     float aspectRatio = driver->GetSwapchainAspectRatio();
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), aspectRatio);
 
@@ -102,7 +113,7 @@ int main()
 
     Texture2D v2Texture;
     ImVec2 watchWSize(32, 32);
-    ImVec2 viewportWSize(32, 32);
+    ImVec2 watchVWSize(32, 32);
     driver->CreateTexture2D(watchWSize.x, watchWSize.y, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
 
     VkSampler sampler;
@@ -125,8 +136,8 @@ int main()
         /* 计算 MVP 矩阵 */
         glm::mat4 PC_MVP = camera.GetProjectionMatrix() * camera.GetViewMatrix() * glm::mat4(1.0f);
 
-        if (watchWSize.x != viewportWSize.x || watchWSize.y != viewportWSize.y) {
-            watchWSize = viewportWSize;
+        if (watchWSize.x != watchVWSize.x || watchWSize.y != watchVWSize.y) {
+            watchWSize = watchVWSize;
             camera.SetAspectRatio(watchWSize.x / watchWSize.y);
             driver->DeviceWaitIdle();
             QkImGuiRemoveTexture(imTextureId);
@@ -142,7 +153,9 @@ int main()
         driver->CmdBindPipeline(v2CommandBuffer, pipeline, watchWSize.x, watchWSize.y);
         driver->CmdPushConstants(v2CommandBuffer, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),glm::value_ptr(PC_MVP));
         driver->CmdBindVertexBuffer(v2CommandBuffer, vertexBuffer, 0);
-        driver->CmdDraw(v2CommandBuffer, ARRAY_SIZE(vertices));
+        driver->CmdBindIndexBuffer(v2CommandBuffer, indexBuffer, 0);
+        // driver->CmdDraw(v2CommandBuffer, ARRAY_SIZE(vertices));
+        driver->CmdDrawIndexed(v2CommandBuffer, 6);
 
         driver->CmdEndRendering(v2CommandBuffer);
         driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -161,12 +174,10 @@ int main()
             QkImGuiVulkanHNewFrame(cmd);
             ImGui::ShowDemoWindow(&showDemoWindow);
             if (QkImGuiBeginViewport("视口")) {
-                ImVec2 currentRegion = ImGui::GetContentRegionAvail();
-                if (viewportWSize.x != currentRegion.x && viewportWSize.y != currentRegion.y) {
-                    viewportWSize.x = currentRegion.x;
-                    viewportWSize.y = currentRegion.y;
-                }
-                ImGui::Image(imTextureId, currentRegion);
+                ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
+                if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
+                    watchVWSize = currentVWSize;
+                ImGui::Image(imTextureId, currentVWSize);
                 QkImGuiEndViewport();
             }
 
@@ -194,6 +205,7 @@ int main()
     driver->DestroySampler(sampler);
     driver->DestroyPipeline(pipeline);
     driver->DestroyBuffer(vertexBuffer);
+    driver->DestroyBuffer(indexBuffer);
 
     return 0;
 }
