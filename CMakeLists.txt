@@ -13,6 +13,7 @@ INCLUDE_DIRECTORIES(SYSTEM "thirdparty" "include")
 ADD_SUBDIRECTORY("modules/volk")
 ADD_SUBDIRECTORY("modules/stb")
 ADD_SUBDIRECTORY("modules/imgui")
+ADD_SUBDIRECTORY("modules/spirv")
 
 IF (APPLE)
     LINK_DIRECTORIES("thirdparty/GLFW/libs/macOS/lib-x86_64")
@@ -25,6 +26,7 @@ ENDIF()
 ADD_EXECUTABLE(${PROJECT_NAME}
   "main.cpp"
   "driver/render_driver.cpp"
+  "driver/SPIRV.cpp"
   "rendering/camera/camera.cpp"
   "platform/glfw3/window.cpp"
 )
@@ -34,6 +36,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE
   "stb"
   "glfw3"
   "imgui"
+  "spirv"
 )
 
 IF (APPLE)

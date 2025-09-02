@@ -8,9 +8,17 @@
 #include <vector>
 #include <assert.h>
 
+#include "SPIRV.h"
+
 namespace VkUtils
 {
-    inline static VkPhysicalDevice PickBestPhysicalDevice(const VkInstance instance)
+    struct VertexInputState {
+        VkPipelineVertexInputStateCreateInfo createInfo;
+        std::vector<VkVertexInputAttributeDescription> attributes;
+        VkVertexInputBindingDescription binding;
+    };
+
+    static VkPhysicalDevice PickBestPhysicalDevice(const VkInstance instance)
     {
         VkResult err = VK_SUCCESS;
 
@@ -46,7 +54,7 @@ namespace VkUtils
         return bestDevice;
     }
 
-    inline static uint32_t FindQueueFamilyIndex(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+    static uint32_t FindQueueFamilyIndex(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
     {
         uint32_t count = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &count, VK_NULL_HANDLE);
@@ -66,7 +74,7 @@ namespace VkUtils
         return UINT32_MAX;
     }
 
-    inline static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
+    static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
     {
         VkSurfaceFormatKHR chosenSurfaceFormat = {};
 
@@ -78,6 +86,42 @@ namespace VkUtils
         }
 
         return chosenSurfaceFormat;
+    }
+
+    static void LoadVertexInputState(const char* filename, VertexInputState* state)
+    {
+        state->createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        state->createInfo.pNext = VK_NULL_HANDLE;
+
+        SPIRV_ShaderModule shaderModule;
+        SPIRV_LoadShaderModule(filename, &shaderModule);
+        SPIRV_InterfaceVariables vertexInputVariables;
+        SPIRV_EnumerateInputVariables(&shaderModule, &vertexInputVariables);
+
+        uint32_t stride = 0;
+
+        for (const auto& vertexInputVariable : vertexInputVariables) {
+            size_t typeSize = 0;
+            VkVertexInputAttributeDescription vertexInputAttributeDescription = {
+                .location = vertexInputVariable->location,
+                .binding = 0,
+                .format = SPIRV_AsVulkanFormatType(vertexInputVariable->format, &typeSize),
+                .offset = stride,
+            };
+            state->attributes.push_back(vertexInputAttributeDescription);
+            stride += static_cast<uint32_t>(typeSize);
+        }
+
+        state->binding.binding = 0;
+        state->binding.stride = stride;
+        state->binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        state->createInfo.vertexBindingDescriptionCount = 1;
+        state->createInfo.pVertexBindingDescriptions = &state->binding;
+        state->createInfo.vertexAttributeDescriptionCount = std::size(state->attributes);
+        state->createInfo.pVertexAttributeDescriptions = std::data(state->attributes);
+
+        SPIRV_FreeShaderModule(&shaderModule);
     }
 
 }

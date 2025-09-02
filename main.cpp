@@ -9,11 +9,12 @@
 #include <direct.h>
 #endif
 
+#include <iostream>
+
 #include <stb/stb_image.h>
+#include <qk_imgui/qk_imgui.h>
 
 #include "rendering/camera/camera.h"
-
-#include <qk_imgui/qk_imgui.h>
 
 struct Vertex {
     glm::vec2 pos;

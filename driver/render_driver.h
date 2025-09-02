@@ -98,7 +98,7 @@ private:
     VkResult _CreateSwapchain(VkSwapchainKHR oldSwapchain);
     VkResult _CreateCommandPool();
     VkResult _CreateDescriptorPool();
-    VkResult _CreateShaderModule(const char* shaderName, const char* stage, VkShaderModule* pShaderModule);
+    VkResult _CreateShaderModule(const char* shaderName, VkShaderModule* pShaderModule);
 
     void _DestroySwapchain();
 

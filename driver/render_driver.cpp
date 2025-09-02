@@ -305,10 +305,14 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     VkShaderModule vertexShaderModule = VK_NULL_HANDLE;
     VkShaderModule fragmentShaderModule = VK_NULL_HANDLE;
 
-    err = _CreateShaderModule(shaderName, "vert", &vertexShaderModule);
+    char vertexShaderPath[PATH_MAX];
+    snprintf(vertexShaderPath, sizeof(vertexShaderPath), "%s.%s.spv", shaderName, "vert");
+    err = _CreateShaderModule(vertexShaderPath, &vertexShaderModule);
     VK_CHECK_ERROR(err);
 
-    err = _CreateShaderModule(shaderName, "frag", &fragmentShaderModule);
+    char fragmentShaderPath[PATH_MAX];
+    snprintf(fragmentShaderPath, sizeof(fragmentShaderPath), "%s.%s.spv", shaderName, "frag");
+    err = _CreateShaderModule(fragmentShaderPath, &fragmentShaderModule);
     VK_CHECK_ERROR(err);
 
     /* VkPipelineShaderStageCreateInfo */
@@ -327,23 +331,10 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
         }
     };
 
-    /* VkVertexInputAttributeDescription */
-    VkVertexInputAttributeDescription vertexInputAttributeDescriptions[] = {
-        { 0, 0, VK_FORMAT_R32G32_SFLOAT, 0 },
-        { 1, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 2 },
-        { 2, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 5 },
-    };
-
-    VkVertexInputBindingDescription vertexInputBindingDescriptions[] = {
-        { 0, sizeof(float) * 7, VK_VERTEX_INPUT_RATE_VERTEX }
-    };
-
-    VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
-    vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputStateCreateInfo.vertexBindingDescriptionCount = ARRAY_SIZE(vertexInputBindingDescriptions);
-    vertexInputStateCreateInfo.pVertexBindingDescriptions = &vertexInputBindingDescriptions[0];
-    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = ARRAY_SIZE(vertexInputAttributeDescriptions);
-    vertexInputStateCreateInfo.pVertexAttributeDescriptions = &vertexInputAttributeDescriptions[0];
+    /* VkPipelineVertexInputStateCreateInfo */
+    VkUtils::VertexInputState vertexInputState;
+    VkUtils::LoadVertexInputState(vertexShaderPath, &vertexInputState);
+    VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = vertexInputState.createInfo;
 
     /* VkPipelineInputAssemblyStateCreateInfo */
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};
@@ -1274,13 +1265,10 @@ VkResult RenderDriver::_CreateDescriptorPool()
     return err;
 }
 
-VkResult RenderDriver::_CreateShaderModule(const char* shaderName, const char* stage, VkShaderModule* pShaderModule)
+VkResult RenderDriver::_CreateShaderModule(const char* path, VkShaderModule* pShaderModule)
 {
     size_t size;
     VkResult err;
-
-    char path[PATH_MAX];
-    snprintf(path, sizeof(path), "%s.%s.spv", shaderName, stage);
 
     char *buf = io_read_bytecode(path, &size);
 
