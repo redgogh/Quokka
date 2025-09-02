@@ -73,7 +73,7 @@ public:
     void DeviceWaitIdle();
     void QueueWaitIdle();
     void WaitForFences(uint32_t count, const VkFence* pFences);
-    void UpdateDescriptorSetsWithTexture(Pipeline pipeline, Texture2D texture, VkSampler sampler);
+    void WriteTextureDescriptor(Pipeline pipeline, Texture2D texture, VkSampler sampler);
     VkResult LoadTextureFromFile(const char* filename, Texture2D* pTexture);
 
     VkInstance GetInstance() const { return instance; }

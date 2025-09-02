@@ -277,7 +277,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     VkPushConstantRange pushConstantRange = {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(float) * 16;\
+    pushConstantRange.size = sizeof(float) * 16;
 
     VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
         { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, VK_NULL_HANDLE }
@@ -331,10 +331,11 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     VkVertexInputAttributeDescription vertexInputAttributeDescriptions[] = {
         { 0, 0, VK_FORMAT_R32G32_SFLOAT, 0 },
         { 1, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(float) * 2 },
+        { 2, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(float) * 5 },
     };
 
     VkVertexInputBindingDescription vertexInputBindingDescriptions[] = {
-        { 0, sizeof(float) * 5, VK_VERTEX_INPUT_RATE_VERTEX }
+        { 0, sizeof(float) * 7, VK_VERTEX_INPUT_RATE_VERTEX }
     };
 
     VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
@@ -950,7 +951,7 @@ void RenderDriver::WaitForFences(uint32_t count, const VkFence *pFences)
     vkWaitForFences(device, count, pFences, VK_TRUE, UINT64_MAX);
 }
 
-void RenderDriver::UpdateDescriptorSetsWithTexture(Pipeline pipeline, Texture2D texture, VkSampler sampler)
+void RenderDriver::WriteTextureDescriptor(Pipeline pipeline, Texture2D texture, VkSampler sampler)
 {
     VkDescriptorImageInfo descriptorImageInfo = {};
     descriptorImageInfo.imageView = texture->vkImageView;

@@ -113,7 +113,7 @@ int main()
 
     Texture2D quokkaLogo;
     driver->LoadTextureFromFile("../misc/quokka.png", &quokkaLogo);
-    driver->UpdateDescriptorSetsWithTexture(pipeline, quokkaLogo, sampler);
+    driver->WriteTextureDescriptor(pipeline, quokkaLogo, sampler);
 
     ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
