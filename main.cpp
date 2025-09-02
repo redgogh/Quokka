@@ -15,16 +15,16 @@
 
 #include <qk_imgui/qk_imgui.h>
 
-struct Vertex
-{
-    float pos[2];
-    float color[3];
+struct Vertex {
+    glm::vec2 pos;
+    glm::vec3 color;
+    glm::vec2 uv;
 };
 
 Vertex vertices[] = {
-    {{  0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }}, // 上
-    {{  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f }}, // 左
-    {{ -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }}  // 右
+    {{  0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.5f, 0.0f }}, // 上
+    {{  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f }}, // 左
+    {{ -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f }}  // 右
 };
 
 void InitQkImGui(const std::unique_ptr<RenderDriver>& driver, const std::unique_ptr<Window>& window)
@@ -111,6 +111,10 @@ int main()
     VkFence drawFence;
     driver->CreateFence(&drawFence);
 
+    Texture2D quokkaLogo;
+    driver->LoadTextureFromFile("../misc/quokka.png", &quokkaLogo);
+    driver->UpdateDescriptorSetsWithTexture(pipeline, quokkaLogo, sampler);
+
     ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     while (!window->ShouldClose()) {
@@ -137,7 +141,6 @@ int main()
 
         driver->CmdBindPipeline(v2CommandBuffer, pipeline, watchWSize.x, watchWSize.y);
         driver->CmdPushConstants(v2CommandBuffer, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),glm::value_ptr(PC_MVP));
-        driver->CmdBindTexture(v2CommandBuffer, pipeline, v2Texture);
         driver->CmdBindVertexBuffer(v2CommandBuffer, vertexBuffer, 0);
         driver->CmdDraw(v2CommandBuffer, ARRAY_SIZE(vertices));
 
@@ -185,6 +188,7 @@ int main()
 
     QkImGuiVulkanHTerminate();
 
+    driver->DestroyTexture2D(quokkaLogo);
     driver->DestroyFence(drawFence);
     driver->DestroyTexture2D(v2Texture);
     driver->DestroySampler(sampler);

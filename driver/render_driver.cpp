@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include "vkutils.h"
+#include "stb/stb_image.h"
 #include "utils/ioutils.h"
 
 #define VK_VERSION_1_3_216
@@ -20,7 +21,6 @@ struct Texture2D_T {
     VkImage vkImage = VK_NULL_HANDLE;
     VkImageView vkImageView = VK_NULL_HANDLE;
     VmaAllocation allocation = VK_NULL_HANDLE;
-    VkSampler sampler = VK_NULL_HANDLE;
     VmaAllocationInfo allocationInfo = {};
     uint32_t width = 0;
     uint32_t height = 0;
@@ -741,27 +741,6 @@ void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipel
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
-void RenderDriver::CmdBindTexture(VkCommandBuffer commandBuffer, Pipeline pipeline, Texture2D texture)
-{
-    if (texture->layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-        CmdTextureMemoryBarrier(commandBuffer, texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-    VkDescriptorImageInfo descriptorImageInfo = {};
-    descriptorImageInfo.imageView = texture->vkImageView;
-    descriptorImageInfo.imageLayout = texture->layout;
-    descriptorImageInfo.sampler = texture->sampler;
-
-    VkWriteDescriptorSet descriptorWrite = {};
-    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = pipeline->vkDescriptorSet;
-    descriptorWrite.dstBinding = 0;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pImageInfo = &descriptorImageInfo;
-
-    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
-}
-
 void RenderDriver::CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset)
 {
     CmdBindVertexBuffers(commandBuffer, 1, &buffer, &offset);
@@ -969,6 +948,48 @@ void RenderDriver::QueueWaitIdle()
 void RenderDriver::WaitForFences(uint32_t count, const VkFence *pFences)
 {
     vkWaitForFences(device, count, pFences, VK_TRUE, UINT64_MAX);
+}
+
+void RenderDriver::UpdateDescriptorSetsWithTexture(Pipeline pipeline, Texture2D texture, VkSampler sampler)
+{
+    VkDescriptorImageInfo descriptorImageInfo = {};
+    descriptorImageInfo.imageView = texture->vkImageView;
+    descriptorImageInfo.imageLayout = texture->layout;
+    descriptorImageInfo.sampler = sampler;
+
+    VkWriteDescriptorSet descriptorWrite = {};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = pipeline->vkDescriptorSet;
+    descriptorWrite.dstBinding = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pImageInfo = &descriptorImageInfo;
+
+    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
+}
+
+VkResult RenderDriver::LoadTextureFromFile(const char *filename, Texture2D *pTexture)
+{
+    VkResult err;
+
+    int w, h, channel;
+    stbi_uc* pixels = stbi_load(filename, &w, &h, &channel, STBI_rgb_alpha);
+
+    err = CreateTexture2D(w, h, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pTexture);
+
+    if (err != VK_SUCCESS)
+        goto TAG_LOAD_TEXTURE_FROM_FILE;
+
+    WriteTexture2D(*pTexture, w * h * 4, pixels);
+
+    VkCommandBuffer commandBuffer;
+    BeginSingleTimeCommandBuffer(&commandBuffer);
+    CmdTextureMemoryBarrier(commandBuffer, *pTexture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    EndSingleTimeCommandBuffer(commandBuffer);
+
+TAG_LOAD_TEXTURE_FROM_FILE:
+    stbi_image_free(pixels);
+    return err;
 }
 
 VkImageView RenderDriver::GetVkImageViewHandle(Texture2D texture) const
@@ -1333,7 +1354,6 @@ Texture2D RenderDriver::_WrapTexture2D(uint32_t w, uint32_t h, VkImage image, Vk
     wrapTexture->height = h;
     wrapTexture->vkImage = image;
     wrapTexture->vkImageView = imageView;
-    wrapTexture->sampler = VK_NULL_HANDLE;
 
     return wrapTexture;
 }
