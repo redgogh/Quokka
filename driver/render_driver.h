@@ -38,11 +38,15 @@ public:
     void DestroyPipeline(Pipeline pipeline);
     VkResult CreateCommandBuffer(VkCommandBuffer* pCommandBuffer);
     void DestroyCommandBuffer(VkCommandBuffer commandBuffer);
-    void DestroyCommandBuffers(uint32_t count, VkCommandBuffer* pCommandBuffers);
+    void DestroyCommandBuffers(uint32_t count, const VkCommandBuffer* pCommandBuffers);
     VkResult CreateFence(VkFence* pFence);
     void DestroyFence(VkFence fence);
     VkResult CreateSemaphore(VkSemaphore* pSemaphore);
     void DestroySemaphore(VkSemaphore semaphore);
+    VkResult CreateDescriptorSetLayout(uint32_t bindingCount, const VkDescriptorSetLayoutBinding *pBindings, VkDescriptorSetLayout* pDescriptorSetLayout);
+    void DestroyDescriptorSetLayout(VkDescriptorSetLayout descriptorSetLayout);
+    VkResult CreateDescriptorSets(uint32_t descriptorSetCount, const VkDescriptorSetLayout* pDescriptorSetLayouts, VkDescriptorSet *pDescriptorSets);
+    void DestroyDescriptorSets(uint32_t descriptorSetCount, VkDescriptorSet* pDescriptorSets);
 
     void BeginSingleTimeCommandBuffer(VkCommandBuffer* pCommandBuffer);
     void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);

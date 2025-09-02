@@ -460,7 +460,7 @@ void RenderDriver::DestroyCommandBuffer(VkCommandBuffer commandBuffer)
     DestroyCommandBuffers(1, &commandBuffer);
 }
 
-void RenderDriver::DestroyCommandBuffers(uint32_t count, VkCommandBuffer* pCommandBuffers)
+void RenderDriver::DestroyCommandBuffers(uint32_t count, const VkCommandBuffer* pCommandBuffers)
 {
     vkFreeCommandBuffers(device, commandPool, count, pCommandBuffers);
 }
@@ -500,6 +500,47 @@ VkResult RenderDriver::CreateSemaphore(VkSemaphore *pSemaphore)
 void RenderDriver::DestroySemaphore(VkSemaphore semaphore)
 {
     vkDestroySemaphore(device, semaphore, VK_NULL_HANDLE);
+}
+
+VkResult RenderDriver::CreateDescriptorSetLayout(uint32_t bindingCount, const VkDescriptorSetLayoutBinding *pBindings, VkDescriptorSetLayout* pDescriptorSetLayout)
+{
+    VkResult err;
+
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
+    descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    descriptorSetLayoutCreateInfo.bindingCount = bindingCount;
+    descriptorSetLayoutCreateInfo.pBindings = pBindings;
+
+    err = vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, VK_NULL_HANDLE, pDescriptorSetLayout);
+    VK_CHECK_ERROR(err);
+
+    return err;
+}
+
+void RenderDriver::DestroyDescriptorSetLayout(VkDescriptorSetLayout descriptorSetLayout)
+{
+    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, VK_NULL_HANDLE);
+}
+
+VkResult RenderDriver::CreateDescriptorSets(uint32_t descriptorSetCount, const VkDescriptorSetLayout* pDescriptorSetLayouts, VkDescriptorSet *pDescriptorSets)
+{
+    VkResult err;
+
+    VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
+    descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+    descriptorSetAllocateInfo.descriptorSetCount = descriptorSetCount;
+    descriptorSetAllocateInfo.pSetLayouts = pDescriptorSetLayouts;
+
+    err = vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, pDescriptorSets);
+    VK_CHECK_ERROR(err);
+
+    return err;
+}
+
+void RenderDriver::DestroyDescriptorSets(uint32_t descriptorSetCount, VkDescriptorSet* pDescriptorSets)
+{
+    vkFreeDescriptorSets(device, descriptorPool, descriptorSetCount, pDescriptorSets);
 }
 
 void RenderDriver::BeginSingleTimeCommandBuffer(VkCommandBuffer *pCommandBuffer)
