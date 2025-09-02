@@ -39,6 +39,8 @@ struct Buffer_T {
 
 struct Pipeline_T {
     VkPipeline vkPipeline = VK_NULL_HANDLE;
+    VkDescriptorSetLayout vkDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSet vkDescriptorSet = VK_NULL_HANDLE;
     VkPipelineLayout vkPipelineLayout = VK_NULL_HANDLE;
     VkPipelineBindPoint vkBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 };
@@ -275,11 +277,23 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     VkPushConstantRange pushConstantRange = {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(float) * 16;
+    pushConstantRange.size = sizeof(float) * 16;\
+
+    VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
+        { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, VK_NULL_HANDLE }
+    };
+
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    CreateDescriptorSetLayout(ARRAY_SIZE(descriptorSetLayoutBindings), descriptorSetLayoutBindings, &descriptorSetLayout);
+
+    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+    CreateDescriptorSets(1, &descriptorSetLayout, &descriptorSet);
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 0;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -426,6 +440,8 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
 
     Pipeline ret = (Pipeline) malloc(sizeof(Pipeline_T));
     ret->vkPipeline = pipeline;
+    ret->vkDescriptorSetLayout = descriptorSetLayout;
+    ret->vkDescriptorSet = descriptorSet;
     ret->vkPipelineLayout = pipelineLayout;
     *pPipeline = ret;
 
@@ -435,6 +451,8 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
 void RenderDriver::DestroyPipeline(Pipeline pipeline)
 {
     vkDestroyPipeline(device, pipeline->vkPipeline, VK_NULL_HANDLE);
+    DestroyDescriptorSets(1, &pipeline->vkDescriptorSet);
+    vkDestroyDescriptorSetLayout(device, pipeline->vkDescriptorSetLayout, VK_NULL_HANDLE);
     vkDestroyPipelineLayout(device, pipeline->vkPipelineLayout, VK_NULL_HANDLE);
     free(pipeline);
 }
@@ -700,6 +718,10 @@ void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipel
 {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vkPipeline);
 
+    vkCmdBindDescriptorSets(commandBuffer, pipeline->vkBindPoint, pipeline->vkPipelineLayout, 0,
+        1, &pipeline->vkDescriptorSet,
+        0, VK_NULL_HANDLE);
+
     VkViewport viewport = {
         .x = 0,
         .y = 0,
@@ -717,6 +739,27 @@ void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipel
     };
 
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+}
+
+void RenderDriver::CmdBindTexture(VkCommandBuffer commandBuffer, Pipeline pipeline, Texture2D texture)
+{
+    if (texture->layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        CmdTextureMemoryBarrier(commandBuffer, texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    VkDescriptorImageInfo descriptorImageInfo = {};
+    descriptorImageInfo.imageView = texture->vkImageView;
+    descriptorImageInfo.imageLayout = texture->layout;
+    descriptorImageInfo.sampler = texture->sampler;
+
+    VkWriteDescriptorSet descriptorWrite = {};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = pipeline->vkDescriptorSet;
+    descriptorWrite.dstBinding = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pImageInfo = &descriptorImageInfo;
+
+    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
 }
 
 void RenderDriver::CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset)

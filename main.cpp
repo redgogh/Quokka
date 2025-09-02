@@ -137,6 +137,7 @@ int main()
 
         driver->CmdBindPipeline(v2CommandBuffer, pipeline, watchWSize.x, watchWSize.y);
         driver->CmdPushConstants(v2CommandBuffer, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),glm::value_ptr(PC_MVP));
+        driver->CmdBindTexture(v2CommandBuffer, pipeline, v2Texture);
         driver->CmdBindVertexBuffer(v2CommandBuffer, vertexBuffer, 0);
         driver->CmdDraw(v2CommandBuffer, ARRAY_SIZE(vertices));
 

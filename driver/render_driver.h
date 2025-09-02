@@ -56,6 +56,7 @@ public:
     void CmdBeginRendering(VkCommandBuffer commandBuffer, Texture2D texture);
     void CmdEndRendering(VkCommandBuffer commandBuffer);
     void CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h);
+    void CmdBindTexture(VkCommandBuffer commandBuffer, Pipeline pipeline, Texture2D texture);
     void CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset);
     void CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t count, Buffer *pBuffers, VkDeviceSize *pOffsets);
     void CmdPushConstants(VkCommandBuffer commandBuffer, Pipeline pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* data);
