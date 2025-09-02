@@ -92,6 +92,7 @@ namespace VkUtils
     {
         state->createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         state->createInfo.pNext = VK_NULL_HANDLE;
+        state->createInfo.flags = 0;
 
         SPIRV_ShaderModule shaderModule;
         SPIRV_LoadShaderModule(filename, &shaderModule);
