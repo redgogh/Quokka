@@ -273,35 +273,9 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
 {
     VkResult err;
 
-    /* VkPipelineLayoutCreateInfo */
-    VkPushConstantRange pushConstantRange = {};
-    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(float) * 16;
-
-    VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
-        { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, VK_NULL_HANDLE }
-    };
-
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    CreateDescriptorSetLayout(ARRAY_SIZE(descriptorSetLayoutBindings), descriptorSetLayoutBindings, &descriptorSetLayout);
-
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-    CreateDescriptorSets(1, &descriptorSetLayout, &descriptorSet);
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = 1;
-    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    err = vkCreatePipelineLayout(device, &pipelineLayoutInfo, VK_NULL_HANDLE, &pipelineLayout);
-    VK_CHECK_ERROR(err);
-
-    /* shader module */
+    /* -------------------------------------------------------- */
+    /*                      Shader Module                       */
+    /* -------------------------------------------------------- */
     VkShaderModule vertexShaderModule = VK_NULL_HANDLE;
     VkShaderModule fragmentShaderModule = VK_NULL_HANDLE;
 
@@ -331,7 +305,39 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
         }
     };
 
-    /* VkPipelineVertexInputStateCreateInfo */
+    /* -------------------------------------------------------- */
+    /*                 Pipeline Layout Create                   */
+    /* -------------------------------------------------------- */
+    VkPushConstantRange pushConstantRange = {};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(float) * 16;
+
+    VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
+        { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, VK_NULL_HANDLE }
+    };
+
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    CreateDescriptorSetLayout(ARRAY_SIZE(descriptorSetLayoutBindings), descriptorSetLayoutBindings, &descriptorSetLayout);
+
+    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+    CreateDescriptorSets(1, &descriptorSetLayout, &descriptorSet);
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 0;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    err = vkCreatePipelineLayout(device, &pipelineLayoutInfo, VK_NULL_HANDLE, &pipelineLayout);
+    VK_CHECK_ERROR(err);
+
+    /* -------------------------------------------------------- */
+    /*                 Pipeline Configuration                   */
+    /* -------------------------------------------------------- */
     VkUtils::VertexInputState vertexInputState;
     VkUtils::LoadVertexInputState(vertexShaderPath, &vertexInputState);
     VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = vertexInputState.createInfo;
