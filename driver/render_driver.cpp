@@ -4,6 +4,7 @@
 #include "render_driver.h"
 
 #include <stdio.h>
+#include <format>
 #include "vkutils.h"
 #include "stb/stb_image.h"
 #include "utils/ioutils.h"
@@ -990,8 +991,11 @@ void RenderDriver::WaitForFences(uint32_t count, const VkFence *pFences)
     vkWaitForFences(device, count, pFences, VK_TRUE, UINT64_MAX);
 }
 
-void RenderDriver::WriteTextureDescriptor(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler)
+void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler)
 {
+    if (!pipeline->descriptorSetInfos.count(name))
+        throw std::runtime_error(std::format("[vulkan] error cannot found descriptor info by name '{}'", name));
+
     const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
 
     VkDescriptorImageInfo descriptorImageInfo = {};
