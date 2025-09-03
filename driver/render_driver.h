@@ -75,9 +75,11 @@ public:
     void DeviceWaitIdle();
     void QueueWaitIdle();
     void WaitForFences(uint32_t count, const VkFence* pFences);
-    void UpdateBufferDescriptor(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer);
-    void UpdateTextureDescriptor(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler);
     VkResult LoadTextureFromFile(const char* filename, Texture2D* pTexture);
+
+    // pipeline bind
+    void BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer);
+    void BindTexture(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler);
 
     VkInstance GetInstance() const { return instance; }
     VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }

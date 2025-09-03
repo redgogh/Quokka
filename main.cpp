@@ -105,6 +105,7 @@ int main()
 
     Buffer uniformBuffer;
     driver->CreateBuffer(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &uniformBuffer);
+    driver->BindUniformBuffer(pipeline, "camera", 0, sizeof(glm::mat4), uniformBuffer);
 
     float aspectRatio = driver->GetSwapchainAspectRatio();
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), aspectRatio);
@@ -128,7 +129,7 @@ int main()
 
     Texture2D quokkaLogo;
     driver->LoadTextureFromFile("../misc/quokka_1.png", &quokkaLogo);
-    driver->UpdateTextureDescriptor(pipeline, "tex", quokkaLogo, sampler);
+    driver->BindTexture(pipeline, "tex", quokkaLogo, sampler);
 
     ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -152,7 +153,6 @@ int main()
 
         // update uniform buffer
         driver->WriteBuffer(uniformBuffer, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
-        driver->UpdateBufferDescriptor(pipeline, "camera", 0, sizeof(glm::mat4), uniformBuffer);
 
         driver->BeginCommandBuffer(v2CommandBuffer);
         driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);

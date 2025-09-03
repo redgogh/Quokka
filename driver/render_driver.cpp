@@ -991,52 +991,6 @@ void RenderDriver::WaitForFences(uint32_t count, const VkFence *pFences)
     vkWaitForFences(device, count, pFences, VK_TRUE, UINT64_MAX);
 }
 
-void RenderDriver::UpdateBufferDescriptor(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer)
-{
-    if (!pipeline->descriptorSetInfos.count(name))
-        throw std::runtime_error(std::format("[vulkan] error cannot found descriptor info by name '{}'", name));
-
-    const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
-
-    VkDescriptorBufferInfo descriptorBufferInfo = {};
-    descriptorBufferInfo.buffer = buffer->vkBuffer;
-    descriptorBufferInfo.offset = offset;
-    descriptorBufferInfo.range = range;
-
-    VkWriteDescriptorSet descriptorWrite = {};
-    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = descriptorSet.vkDescriptorSet;
-    descriptorWrite.dstBinding = descriptorSet.binding;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pBufferInfo = &descriptorBufferInfo;
-
-    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
-}
-
-void RenderDriver::UpdateTextureDescriptor(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler)
-{
-    if (!pipeline->descriptorSetInfos.count(name))
-        throw std::runtime_error(std::format("[vulkan] error cannot found descriptor info by name '{}'", name));
-
-    const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
-
-    VkDescriptorImageInfo descriptorImageInfo = {};
-    descriptorImageInfo.imageView = texture->vkImageView;
-    descriptorImageInfo.imageLayout = texture->layout;
-    descriptorImageInfo.sampler = sampler;
-
-    VkWriteDescriptorSet descriptorWrite = {};
-    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = descriptorSet.vkDescriptorSet;
-    descriptorWrite.dstBinding = descriptorSet.binding;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pImageInfo = &descriptorImageInfo;
-
-    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
-}
-
 VkResult RenderDriver::LoadTextureFromFile(const char *filename, Texture2D *pTexture)
 {
     VkResult err;
@@ -1059,6 +1013,52 @@ VkResult RenderDriver::LoadTextureFromFile(const char *filename, Texture2D *pTex
 TAG_LOAD_TEXTURE_FROM_FILE:
     stbi_image_free(pixels);
     return err;
+}
+
+void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer)
+{
+    if (!pipeline->descriptorSetInfos.count(name))
+        throw std::runtime_error(std::format("[vulkan] error cannot found descriptor info by name '{}'", name));
+
+    const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
+
+    VkDescriptorBufferInfo descriptorBufferInfo = {};
+    descriptorBufferInfo.buffer = buffer->vkBuffer;
+    descriptorBufferInfo.offset = offset;
+    descriptorBufferInfo.range = range;
+
+    VkWriteDescriptorSet descriptorWrite = {};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = descriptorSet.vkDescriptorSet;
+    descriptorWrite.dstBinding = descriptorSet.binding;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pBufferInfo = &descriptorBufferInfo;
+
+    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
+}
+
+void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler)
+{
+    if (!pipeline->descriptorSetInfos.count(name))
+        throw std::runtime_error(std::format("[vulkan] error cannot found descriptor info by name '{}'", name));
+
+    const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
+
+    VkDescriptorImageInfo descriptorImageInfo = {};
+    descriptorImageInfo.imageView = texture->vkImageView;
+    descriptorImageInfo.imageLayout = texture->layout;
+    descriptorImageInfo.sampler = sampler;
+
+    VkWriteDescriptorSet descriptorWrite = {};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = descriptorSet.vkDescriptorSet;
+    descriptorWrite.dstBinding = descriptorSet.binding;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pImageInfo = &descriptorImageInfo;
+
+    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
 }
 
 VkImageView RenderDriver::GetVkImageViewHandle(Texture2D texture) const
