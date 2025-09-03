@@ -103,6 +103,9 @@ int main()
     driver->CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &indexBuffer);
     driver->WriteBuffer(indexBuffer, indexBufferSize, indices);
 
+    Buffer uniformBuffer;
+    driver->CreateBuffer(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &uniformBuffer);
+
     float aspectRatio = driver->GetSwapchainAspectRatio();
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), aspectRatio);
 
@@ -125,7 +128,7 @@ int main()
 
     Texture2D quokkaLogo;
     driver->LoadTextureFromFile("../misc/quokka_1.png", &quokkaLogo);
-    driver->BindTexture(pipeline, "tex", quokkaLogo, sampler);
+    driver->UpdateTextureDescriptor(pipeline, "tex", quokkaLogo, sampler);
 
     ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -147,12 +150,15 @@ int main()
             imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
 
+        // update uniform buffer
+        driver->WriteBuffer(uniformBuffer, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
+        driver->UpdateBufferDescriptor(pipeline, "camera", 0, sizeof(glm::mat4), uniformBuffer);
+
         driver->BeginCommandBuffer(v2CommandBuffer);
         driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
         driver->CmdBeginRendering(v2CommandBuffer, v2Texture);
 
         driver->CmdBindPipeline(v2CommandBuffer, pipeline, watchWSize.x, watchWSize.y);
-        driver->CmdPushConstants(v2CommandBuffer, pipeline, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),glm::value_ptr(PC_MVP));
         driver->CmdBindVertexBuffer(v2CommandBuffer, vertexBuffer, 0);
         driver->CmdBindIndexBuffer(v2CommandBuffer, indexBuffer, 0);
         // driver->CmdDraw(v2CommandBuffer, ARRAY_SIZE(vertices));
@@ -205,6 +211,7 @@ int main()
     driver->DestroyTexture2D(v2Texture);
     driver->DestroySampler(sampler);
     driver->DestroyPipeline(pipeline);
+    driver->DestroyBuffer(uniformBuffer);
     driver->DestroyBuffer(vertexBuffer);
     driver->DestroyBuffer(indexBuffer);
 

@@ -10,13 +10,13 @@ layout(location = 2) in vec2 uv;
 layout(location = 0) out vec3 outColor;
 layout(location = 1) out vec2 outUV;
 
-layout(push_constant) uniform PushConstants {
+layout(set = 0, binding = 0) uniform Camera {
     mat4 mvp;
-} pc;
+} camera;
 
 void main()
 {
-    gl_Position = pc.mvp * vec4(pos, 0.0f, 1.0f);
+    gl_Position = camera.mvp * vec4(pos, 0.0f, 1.0f);
     outColor = color;
     outUV = uv;
 }
