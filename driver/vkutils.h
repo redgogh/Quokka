@@ -106,7 +106,7 @@ namespace VkUtils
             VkVertexInputAttributeDescription vertexInputAttributeDescription = {
                 .location = vertexInputVariable->location,
                 .binding = 0,
-                .format = SPIRV_AsVulkanFormatType(vertexInputVariable->format, &typeSize),
+                .format = SPIRV_ToVkFormat(vertexInputVariable->format, &typeSize),
                 .offset = stride,
             };
             state->attributes.push_back(vertexInputAttributeDescription);

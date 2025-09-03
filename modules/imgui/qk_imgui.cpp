@@ -144,8 +144,8 @@ bool _DragScalarN(const char *label, float *v, int v_number, float v_speed, floa
     ImGui::TextUnformatted(label);
     ImGui::SameLine();
 
-    static const char  *axis_labels[4] = { "X", "Y", "Z", "W" };
-    static const ImVec4 axis_colors[4] = {
+    static const char *axis_labels[4] = { "X", "Y", "Z", "W" };
+    static constexpr ImVec4 axis_colors[4] = {
         ImVec4(1.0f, 0.0f, 0.0f, 1.0f), // R
         ImVec4(0.0f, 1.0f, 0.0f, 1.0f), // G
         ImVec4(0.0f, 0.4f, 1.0f, 1.0f), // B
@@ -159,7 +159,7 @@ bool _DragScalarN(const char *label, float *v, int v_number, float v_speed, floa
             const char *id = axis_labels[i];
             ImGui::PushID(id);
             ImGui::PushItemWidth(single_item_width);
-            ImGui::TextColored(axis_colors[i], axis_labels[i]);
+            ImGui::TextColored(axis_colors[i], "%s", axis_labels[i]);
             ImGui::SameLine();
             if (ImGui::DragFloat("", &v[i], v_speed, v_min, v_max, format)) {
                 trigger = true;
