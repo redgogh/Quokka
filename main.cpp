@@ -123,9 +123,13 @@ int main()
     VkFence drawFence;
     driver->CreateFence(&drawFence);
 
-    Texture2D quokkaLogo;
-    driver->LoadTextureFromFile("../misc/quokka.png", &quokkaLogo);
-    driver->WriteTextureDescriptor(pipeline, quokkaLogo, sampler);
+    Texture2D quokkaLogoTex0;
+    driver->LoadTextureFromFile("../misc/quokka.png", &quokkaLogoTex0);
+    driver->WriteTextureDescriptor(pipeline, "tex0", quokkaLogoTex0, sampler);
+
+    Texture2D quokkaLogoTex1;
+    driver->LoadTextureFromFile("../misc/quokka_1.png", &quokkaLogoTex1);
+    driver->WriteTextureDescriptor(pipeline, "tex1", quokkaLogoTex1, sampler);
 
     ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -200,7 +204,8 @@ int main()
 
     QkImGuiVulkanHTerminate();
 
-    driver->DestroyTexture2D(quokkaLogo);
+    driver->DestroyTexture2D(quokkaLogoTex1);
+    driver->DestroyTexture2D(quokkaLogoTex0);
     driver->DestroyFence(drawFence);
     driver->DestroyTexture2D(v2Texture);
     driver->DestroySampler(sampler);

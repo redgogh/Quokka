@@ -39,8 +39,15 @@ struct Buffer_T {
 
 struct Pipeline_T {
     VkPipeline vkPipeline = VK_NULL_HANDLE;
-    VkDescriptorSetLayout vkDescriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorSet vkDescriptorSet = VK_NULL_HANDLE;
+    std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
+    std::vector<VkDescriptorSet> vkDescriptorSets;
+    typedef struct {
+        std::string name;
+        uint32_t set;
+        uint32_t binding;
+        VkDescriptorSet vkDescriptorSet;
+    } DescriptorSetInfo;
+    std::unordered_map<std::string, DescriptorSetInfo> descriptorSetInfos;
     VkPipelineLayout vkPipelineLayout = VK_NULL_HANDLE;
     VkPipelineBindPoint vkBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 };
@@ -308,26 +315,39 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     /* -------------------------------------------------------- */
     /*                 Pipeline Layout Create                   */
     /* -------------------------------------------------------- */
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    VkUtils::DescriptorSetLayoutInfo descriptorSetLayoutInfo;
+    VkUtils::LoadDescriptorSetLayoutInfo(vertexShaderPath, &descriptorSetLayoutInfo);
+    VkUtils::LoadDescriptorSetLayoutInfo(fragmentShaderPath, &descriptorSetLayoutInfo);
+
+    std::vector<VkDescriptorSetLayout> setLayouts(std::size(descriptorSetLayoutInfo.bindingPerSet));
+    for (auto& [setIndex, layoutBindings] : descriptorSetLayoutInfo.bindingPerSet) {
+        CreateDescriptorSetLayout(std::size(layoutBindings), std::data(layoutBindings), &setLayouts[setIndex]);
+    }
+
+    std::vector<VkDescriptorSet> sets(std::size(setLayouts));
+    CreateDescriptorSets(std::size(setLayouts), std::data(setLayouts), std::data(sets));
+
+    std::unordered_map<std::string, Pipeline_T::DescriptorSetInfo> descriptorSetInfos;
+    for (auto& [name, location] : descriptorSetLayoutInfo.nameToBinding) {
+        Pipeline_T::DescriptorSetInfo descriptorSetInfo;
+        descriptorSetInfo.name = name;
+        descriptorSetInfo.set = location.set;
+        descriptorSetInfo.binding = location.binding;
+        descriptorSetInfo.vkDescriptorSet = sets[location.set];
+        descriptorSetInfos[name] = descriptorSetInfo;
+    }
+
+    pipelineLayoutInfo.setLayoutCount = std::size(setLayouts);
+    pipelineLayoutInfo.pSetLayouts = std::data(setLayouts);
+
     VkPushConstantRange pushConstantRange = {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
     pushConstantRange.size = sizeof(float) * 16;
 
-    VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = {
-        { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, VK_NULL_HANDLE }
-    };
-
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    CreateDescriptorSetLayout(ARRAY_SIZE(descriptorSetLayoutBindings), descriptorSetLayoutBindings, &descriptorSetLayout);
-
-    VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
-    CreateDescriptorSets(1, &descriptorSetLayout, &descriptorSet);
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -440,8 +460,9 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
 
     Pipeline ret = (Pipeline) malloc(sizeof(Pipeline_T));
     ret->vkPipeline = pipeline;
-    ret->vkDescriptorSetLayout = descriptorSetLayout;
-    ret->vkDescriptorSet = descriptorSet;
+    ret->vkDescriptorSetLayouts = setLayouts;
+    ret->vkDescriptorSets = sets;
+    ret->descriptorSetInfos = descriptorSetInfos;
     ret->vkPipelineLayout = pipelineLayout;
     ret->vkBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     *pPipeline = ret;
@@ -452,8 +473,11 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
 void RenderDriver::DestroyPipeline(Pipeline pipeline)
 {
     vkDestroyPipeline(device, pipeline->vkPipeline, VK_NULL_HANDLE);
-    DestroyDescriptorSets(1, &pipeline->vkDescriptorSet);
-    vkDestroyDescriptorSetLayout(device, pipeline->vkDescriptorSetLayout, VK_NULL_HANDLE);
+    DestroyDescriptorSets(std::size(pipeline->vkDescriptorSets), std::data(pipeline->vkDescriptorSets));
+
+    for (auto& setLayout : pipeline->vkDescriptorSetLayouts)
+        vkDestroyDescriptorSetLayout(device, setLayout, VK_NULL_HANDLE);
+
     vkDestroyPipelineLayout(device, pipeline->vkPipelineLayout, VK_NULL_HANDLE);
     free(pipeline);
 }
@@ -719,9 +743,14 @@ void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipel
 {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vkPipeline);
 
-    vkCmdBindDescriptorSets(commandBuffer, pipeline->vkBindPoint, pipeline->vkPipelineLayout, 0,
-        1, &pipeline->vkDescriptorSet,
-        0, VK_NULL_HANDLE);
+    uint32_t setIndex = 0;
+    for (auto& descriptorSet : pipeline->vkDescriptorSets) {
+        vkCmdBindDescriptorSets(commandBuffer, pipeline->vkBindPoint, pipeline->vkPipelineLayout,
+                                setIndex,
+                                1, &descriptorSet,
+                                0, VK_NULL_HANDLE);
+        setIndex++;
+    }
 
     VkViewport viewport = {
         .x = 0,
@@ -961,8 +990,10 @@ void RenderDriver::WaitForFences(uint32_t count, const VkFence *pFences)
     vkWaitForFences(device, count, pFences, VK_TRUE, UINT64_MAX);
 }
 
-void RenderDriver::WriteTextureDescriptor(Pipeline pipeline, Texture2D texture, VkSampler sampler)
+void RenderDriver::WriteTextureDescriptor(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler)
 {
+    const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
+
     VkDescriptorImageInfo descriptorImageInfo = {};
     descriptorImageInfo.imageView = texture->vkImageView;
     descriptorImageInfo.imageLayout = texture->layout;
@@ -970,8 +1001,8 @@ void RenderDriver::WriteTextureDescriptor(Pipeline pipeline, Texture2D texture, 
 
     VkWriteDescriptorSet descriptorWrite = {};
     descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = pipeline->vkDescriptorSet;
-    descriptorWrite.dstBinding = 0;
+    descriptorWrite.dstSet = descriptorSet.vkDescriptorSet;
+    descriptorWrite.dstBinding = descriptorSet.binding;
     descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     descriptorWrite.descriptorCount = 1;
     descriptorWrite.pImageInfo = &descriptorImageInfo;

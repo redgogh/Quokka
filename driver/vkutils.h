@@ -18,6 +18,15 @@ namespace VkUtils
         VkVertexInputBindingDescription binding;
     };
 
+    struct DescriptorSetLayoutInfo {
+        std::unordered_map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> bindingPerSet;
+        struct BindingLocation {
+            uint32_t set; // set index
+            uint32_t binding; // binding index
+        };
+        std::unordered_map<std::string, BindingLocation> nameToBinding;
+    };
+
     static VkPhysicalDevice PickBestPhysicalDevice(const VkInstance instance)
     {
         VkResult err = VK_SUCCESS;
@@ -121,6 +130,35 @@ namespace VkUtils
         state->createInfo.pVertexBindingDescriptions = &state->binding;
         state->createInfo.vertexAttributeDescriptionCount = std::size(state->attributes);
         state->createInfo.pVertexAttributeDescriptions = std::data(state->attributes);
+
+        SPIRV_FreeShaderModule(&shaderModule);
+    }
+
+    static void LoadDescriptorSetLayoutInfo(const char* path, DescriptorSetLayoutInfo* info)
+    {
+        SPIRV_ShaderModule shaderModule;
+        SPIRV_LoadShaderModule(path, &shaderModule);
+
+        SPIRV_DescriptorSets sets;
+        SPIRV_EnumerateDescriptorSets(&shaderModule, &sets);
+
+        for (auto& spvSet : sets) {
+            uint32_t setIndex = spvSet->set;
+
+            for (int i = 0; i < spvSet->binding_count; i++) {
+                SpvReflectDescriptorBinding* spvBinding = spvSet->bindings[i];
+
+                VkDescriptorSetLayoutBinding vkBinding = {};
+                vkBinding.binding = spvBinding->binding;
+                vkBinding.descriptorType = SPIRV_ToVkDescriptorType(spvBinding->descriptor_type);
+                vkBinding.descriptorCount = spvBinding->count;
+                vkBinding.stageFlags = SPIRV_ToVkShaderStageFlagBits(shaderModule.shader_stage);
+                vkBinding.pImmutableSamplers = VK_NULL_HANDLE;
+
+                info->bindingPerSet[setIndex].push_back(vkBinding);
+                info->nameToBinding[std::string(spvBinding->name)] = { setIndex, spvBinding->binding };
+            }
+        }
 
         SPIRV_FreeShaderModule(&shaderModule);
     }
