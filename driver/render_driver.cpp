@@ -281,6 +281,8 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
 {
     VkResult err;
 
+    printf("[vulkan] create graphics pipeline: %s\n", shaderName);
+
     /* -------------------------------------------------------- */
     /*                      Shader Module                       */
     /* -------------------------------------------------------- */
@@ -331,6 +333,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     std::vector<VkDescriptorSet> sets(std::size(setLayouts));
     CreateDescriptorSets(std::size(setLayouts), std::data(setLayouts), std::data(sets));
 
+    printf("[vulkan]    build descriptor set info:\n");
     std::unordered_map<std::string, Pipeline_T::DescriptorSetInfo> descriptorSetInfos;
     for (auto& [name, location] : descriptorSetLayoutInfo.nameToBinding) {
         Pipeline_T::DescriptorSetInfo descriptorSetInfo;
@@ -339,6 +342,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
         descriptorSetInfo.binding = location.binding;
         descriptorSetInfo.vkDescriptorSet = sets[location.set];
         descriptorSetInfos[name] = descriptorSetInfo;
+        printf("[vulkan]      - layout(set = %u, binding = %u) %p %s\n", location.set, location.binding, sets[location.set], name.c_str());
     }
 
     pipelineLayoutInfo.setLayoutCount = std::size(setLayouts);
