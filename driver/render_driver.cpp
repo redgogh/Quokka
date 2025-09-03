@@ -157,7 +157,7 @@ VkResult RenderDriver::CreateBuffer(const size_t size, VkBufferUsageFlags usage,
     VmaAllocationCreateInfo allocationCreateInfo = {};
     allocationCreateInfo.usage = _GuessMemoryUsage(usage);
 
-    *pBuffer = (Buffer_T*) malloc(sizeof(Buffer_T));
+    *pBuffer = new Buffer_T;
 
     err = vmaCreateBuffer(allocator,
                           &bufferCreateInfo,
@@ -177,7 +177,7 @@ VkResult RenderDriver::CreateBuffer(const size_t size, VkBufferUsageFlags usage,
 void RenderDriver::DestroyBuffer(Buffer buffer)
 {
     vmaDestroyBuffer(allocator, buffer->vkBuffer, buffer->allocation);
-    free(buffer);
+    delete buffer;
 }
 
 VkResult RenderDriver::CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture2D *pTexture2D)
@@ -222,7 +222,7 @@ VkResult RenderDriver::CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, 
     err = vkCreateImageView(device, &imageViewCreateInfo, VK_NULL_HANDLE, &imageView);
     VK_CHECK_ERROR(err);
 
-    *pTexture2D = (Texture2D_T *) malloc(sizeof(Texture2D_T));
+    *pTexture2D = new Texture2D_T;
 
     (*pTexture2D)->vkImage = image;
     (*pTexture2D)->vkImageView = imageView;
@@ -236,11 +236,11 @@ VkResult RenderDriver::CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, 
     return err;
 }
 
-void RenderDriver::DestroyTexture2D(Texture2D Texture2D)
+void RenderDriver::DestroyTexture2D(Texture2D texture2D)
 {
-    vmaDestroyImage(allocator, Texture2D->vkImage, Texture2D->allocation);
-    vkDestroyImageView(device, Texture2D->vkImageView, VK_NULL_HANDLE);
-    free(Texture2D);
+    vmaDestroyImage(allocator, texture2D->vkImage, texture2D->allocation);
+    vkDestroyImageView(device, texture2D->vkImageView, VK_NULL_HANDLE);
+    delete texture2D;
 }
 
 VkResult RenderDriver::CreateSampler(VkSampler *pSampler)
@@ -458,7 +458,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     vkDestroyShaderModule(device, vertexShaderModule, VK_NULL_HANDLE);
     vkDestroyShaderModule(device, fragmentShaderModule, VK_NULL_HANDLE);
 
-    Pipeline ret = (Pipeline) malloc(sizeof(Pipeline_T));
+    Pipeline ret = new Pipeline_T;
     ret->vkPipeline = pipeline;
     ret->vkDescriptorSetLayouts = setLayouts;
     ret->vkDescriptorSets = sets;
@@ -479,7 +479,7 @@ void RenderDriver::DestroyPipeline(Pipeline pipeline)
         vkDestroyDescriptorSetLayout(device, setLayout, VK_NULL_HANDLE);
 
     vkDestroyPipelineLayout(device, pipeline->vkPipelineLayout, VK_NULL_HANDLE);
-    free(pipeline);
+    delete pipeline;
 }
 
 VkResult RenderDriver::CreateCommandBuffer(VkCommandBuffer *pCommandBuffer)
@@ -1327,7 +1327,7 @@ void RenderDriver::_DestroySwapchain()
 {
     for (uint32_t i = 0; i < minImageCount; i++) {
         vkDestroyImageView(device, swapchainTextures[i]->vkImageView, VK_NULL_HANDLE);
-        free(swapchainTextures[i]);
+        delete swapchainTextures[i];
         DestroySemaphore(renderFinishedSemaphores[i]);
     }
 
@@ -1387,8 +1387,7 @@ VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
 
 Texture2D RenderDriver::_WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
 {
-    Texture2D wrapTexture = static_cast<Texture2D_T*>(malloc(sizeof(Texture2D_T))); // NOLINT
-    memset(wrapTexture, 0, sizeof(Texture2D_T));
+    Texture2D wrapTexture = new Texture2D_T;
     wrapTexture->width = w;
     wrapTexture->height = h;
     wrapTexture->vkImage = image;

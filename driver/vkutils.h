@@ -10,6 +10,8 @@
 
 #include "SPIRV.h"
 
+#include <unordered_map>
+
 namespace VkUtils
 {
     struct VertexInputState {
