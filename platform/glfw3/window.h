@@ -24,6 +24,11 @@ public:
     }
 #endif /* VK_VERSION_1_0 */
 
+    static double GetTime()
+    {
+        return glfwGetTime();
+    }
+
     static void PollEvents()
     {
         glfwPollEvents();
