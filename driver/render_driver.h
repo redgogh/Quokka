@@ -48,6 +48,7 @@ public:
     VkResult CreateDescriptorSets(uint32_t descriptorSetCount, const VkDescriptorSetLayout* pDescriptorSetLayouts, VkDescriptorSet *pDescriptorSets);
     void DestroyDescriptorSets(uint32_t descriptorSetCount, VkDescriptorSet* pDescriptorSets);
 
+    // Vulkan commands
     void BeginSingleTimeCommandBuffer(VkCommandBuffer* pCommandBuffer);
     void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);
     void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags = 0);
@@ -66,6 +67,7 @@ public:
     void SubmitQueue(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, uint32_t signalSemaphoreCount, const VkSemaphore* pSignalSemaphores, VkFence fence);
     void SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores);
 
+    // Open APIs
     void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture2D* pTexture);
     void RebuildSwapchain();
     void ReadBuffer(Buffer buffer, size_t size, void* data);
