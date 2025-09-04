@@ -69,9 +69,9 @@ DragState dragState;
 
 void MoveCamera(Camera* camera, Window* window)
 {
-    static float velocity = 0.01f;
+    static float velocity = 0.002f;
 
-    if (window->GetMouseButton(GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+    if (window->GetMouseButton(GLFW_MOUSE_BUTTON_3) == GLFW_PRESS) {
         double x, y;
         window->GetCursorPos(&x, &y);
 
@@ -83,7 +83,7 @@ void MoveCamera(Camera* camera, Window* window)
         } else {
             float dx = static_cast<float>(x - dragState.startX) * velocity;
             float dy = static_cast<float>(y - dragState.startY) * velocity;
-            camera->SetPosition(dragState.startCameraPos + glm::vec3(-dx, dy, 0.0f));
+            camera->SetPosition(dragState.startCameraPos + glm::vec3(-dx, -dy, 0.0f));
         }
 
     } else {

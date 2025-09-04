@@ -2,6 +2,7 @@
 #define QK_FORMAT_H_
 
 #include <string>
+#include <stdarg.h>
 
 /**
  * std::string format
