@@ -1021,7 +1021,7 @@ TAG_LOAD_TEXTURE_FROM_FILE:
 
 void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer)
 {
-    if (!pipeline->descriptorSetInfos.count(name))
+    if (!pipeline->descriptorSetInfos.contains(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
 
     const QVkPipeline::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
@@ -1044,7 +1044,7 @@ void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name,
 
 void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler)
 {
-    if (!pipeline->descriptorSetInfos.count(name))
+    if (!pipeline->descriptorSetInfos.contains(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
 
     const QVkPipeline::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
