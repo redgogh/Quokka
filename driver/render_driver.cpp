@@ -18,7 +18,7 @@
 /* volk 全局只初始化一次 */
 static bool volkInitialized = false;
 
-struct Texture2D_T {
+struct QVkTexture2D {
     VkImage vkImage = VK_NULL_HANDLE;
     VkImageView vkImageView = VK_NULL_HANDLE;
     VmaAllocation allocation = VK_NULL_HANDLE;
@@ -29,7 +29,7 @@ struct Texture2D_T {
     VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
 };
 
-struct Buffer_T {
+struct QVkBuffer {
     VkBuffer vkBuffer = VK_NULL_HANDLE;
     VmaAllocation allocation = VK_NULL_HANDLE;
     VkBufferUsageFlags usage = VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM;
@@ -38,7 +38,7 @@ struct Buffer_T {
     VmaAllocationInfo allocationInfo;
 };
 
-struct Pipeline_T {
+struct QVkPipeline {
     VkPipeline vkPipeline = VK_NULL_HANDLE;
     std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
     std::vector<VkDescriptorSet> vkDescriptorSets;
@@ -158,7 +158,7 @@ VkResult RenderDriver::CreateBuffer(const size_t size, VkBufferUsageFlags usage,
     VmaAllocationCreateInfo allocationCreateInfo = {};
     allocationCreateInfo.usage = _GuessMemoryUsage(usage);
 
-    *pBuffer = new Buffer_T;
+    *pBuffer = new QVkBuffer;
 
     err = vmaCreateBuffer(allocator,
                           &bufferCreateInfo,
@@ -223,7 +223,7 @@ VkResult RenderDriver::CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, 
     err = vkCreateImageView(device, &imageViewCreateInfo, VK_NULL_HANDLE, &imageView);
     VK_CHECK_ERROR(err);
 
-    *pTexture2D = new Texture2D_T;
+    *pTexture2D = new QVkTexture2D;
 
     (*pTexture2D)->vkImage = image;
     (*pTexture2D)->vkImageView = imageView;
@@ -334,9 +334,9 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     CreateDescriptorSets(std::size(setLayouts), std::data(setLayouts), std::data(sets));
 
     printf("[vulkan]    build descriptor set info:\n");
-    std::unordered_map<std::string, Pipeline_T::DescriptorSetInfo> descriptorSetInfos;
+    std::unordered_map<std::string, QVkPipeline::DescriptorSetInfo> descriptorSetInfos;
     for (auto& [name, location] : descriptorSetLayoutInfo.nameToBinding) {
-        Pipeline_T::DescriptorSetInfo descriptorSetInfo;
+        QVkPipeline::DescriptorSetInfo descriptorSetInfo;
         descriptorSetInfo.name = name;
         descriptorSetInfo.set = location.set;
         descriptorSetInfo.binding = location.binding;
@@ -463,7 +463,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     vkDestroyShaderModule(device, vertexShaderModule, VK_NULL_HANDLE);
     vkDestroyShaderModule(device, fragmentShaderModule, VK_NULL_HANDLE);
 
-    Pipeline ret = new Pipeline_T;
+    Pipeline ret = new QVkPipeline;
     ret->vkPipeline = pipeline;
     ret->vkDescriptorSetLayouts = setLayouts;
     ret->vkDescriptorSets = sets;
@@ -1024,7 +1024,7 @@ void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name,
     if (!pipeline->descriptorSetInfos.count(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
 
-    const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
+    const QVkPipeline::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
 
     VkDescriptorBufferInfo descriptorBufferInfo = {};
     descriptorBufferInfo.buffer = buffer->vkBuffer;
@@ -1047,7 +1047,7 @@ void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Textu
     if (!pipeline->descriptorSetInfos.count(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
 
-    const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
+    const QVkPipeline::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
 
     VkDescriptorImageInfo descriptorImageInfo = {};
     descriptorImageInfo.imageView = texture->vkImageView;
@@ -1420,7 +1420,7 @@ VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
 
 Texture2D RenderDriver::_WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
 {
-    Texture2D wrapTexture = new Texture2D_T;
+    Texture2D wrapTexture = new QVkTexture2D;
     wrapTexture->width = w;
     wrapTexture->height = h;
     wrapTexture->vkImage = image;

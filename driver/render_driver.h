@@ -14,9 +14,9 @@
 #include <assert.h>
 #include <vector>
 
-typedef struct Texture2D_T *Texture2D;
-typedef struct Buffer_T *Buffer;
-typedef struct Pipeline_T *Pipeline;
+typedef struct QVkTexture2D *Texture2D;
+typedef struct QVkBuffer *Buffer;
+typedef struct QVkPipeline *Pipeline;
 
 VkImageView dGetVkImageView(Texture2D texture);
 

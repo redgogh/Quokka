@@ -23065,7 +23065,7 @@ struct FeaturesChain {
 #endif
     VkPhysicalDeviceFormatPackFeaturesARM physicalDeviceFormatPackFeaturesARM{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FORMAT_PACK_FEATURES_ARM, nullptr };
     VkPhysicalDeviceTensorFeaturesARM physicalDeviceTensorFeaturesARM{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TENSOR_FEATURES_ARM, nullptr };
-    VkPhysicalDeviceDescriptorBufferTensorFeaturesARM physicalDeviceDescriptorBufferTensorFeaturesARM{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_TENSOR_FEATURES_ARM, nullptr };
+    VkPhysicalDeviceDescriptorBufferTensorFeaturesARM physicalDeviceDescriptorBufferTensorFeaturesARM{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_QVkBufferENSOR_FEATURES_ARM, nullptr };
     VkPhysicalDeviceShaderFloat8FeaturesEXT physicalDeviceShaderFloat8FeaturesEXT{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT8_FEATURES_EXT, nullptr };
     VkPhysicalDeviceDataGraphFeaturesARM physicalDeviceDataGraphFeaturesARM{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DATA_GRAPH_FEATURES_ARM, nullptr };
     VkPhysicalDevicePipelineCacheIncrementalModeFeaturesSEC physicalDevicePipelineCacheIncrementalModeFeaturesSEC{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CACHE_INCREMENTAL_MODE_FEATURES_SEC, nullptr };
@@ -23312,7 +23312,7 @@ struct FeaturesChain {
 #endif
         this->structureSize.insert({ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FORMAT_PACK_FEATURES_ARM, size<VkPhysicalDeviceFormatPackFeaturesARM>() });
         this->structureSize.insert({ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TENSOR_FEATURES_ARM, size<VkPhysicalDeviceTensorFeaturesARM>() });
-        this->structureSize.insert({ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_TENSOR_FEATURES_ARM, size<VkPhysicalDeviceDescriptorBufferTensorFeaturesARM>() });
+        this->structureSize.insert({ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_QVkBufferENSOR_FEATURES_ARM, size<VkPhysicalDeviceDescriptorBufferTensorFeaturesARM>() });
         this->structureSize.insert({ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT8_FEATURES_EXT, size<VkPhysicalDeviceShaderFloat8FeaturesEXT>() });
         this->structureSize.insert({ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DATA_GRAPH_FEATURES_ARM, size<VkPhysicalDeviceDataGraphFeaturesARM>() });
         this->structureSize.insert({ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CACHE_INCREMENTAL_MODE_FEATURES_SEC, size<VkPhysicalDevicePipelineCacheIncrementalModeFeaturesSEC>() });

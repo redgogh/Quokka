@@ -162,8 +162,8 @@ static inline const char* string_VkStructureType(VkStructureType input_value) {
             return "VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO";
         case VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO:
             return "VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO";
-        case VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO:
-            return "VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO";
+        case VK_STRUCTURE_TYPE_QVkPipelineESSELLATION_STATE_CREATE_INFO:
+            return "VK_STRUCTURE_TYPE_QVkPipelineESSELLATION_STATE_CREATE_INFO";
         case VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO:
             return "VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO";
         case VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO:
@@ -282,8 +282,8 @@ static inline const char* string_VkStructureType(VkStructureType input_value) {
             return "VK_STRUCTURE_TYPE_RENDER_PASS_INPUT_ATTACHMENT_ASPECT_CREATE_INFO";
         case VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO:
             return "VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO";
-        case VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO:
-            return "VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO";
+        case VK_STRUCTURE_TYPE_QVkPipelineESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO:
+            return "VK_STRUCTURE_TYPE_QVkPipelineESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO";
         case VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO:
             return "VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO";
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES:
@@ -492,8 +492,8 @@ static inline const char* string_VkStructureType(VkStructureType input_value) {
             return "VK_STRUCTURE_TYPE_COPY_BUFFER_INFO_2";
         case VK_STRUCTURE_TYPE_COPY_IMAGE_INFO_2:
             return "VK_STRUCTURE_TYPE_COPY_IMAGE_INFO_2";
-        case VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2:
-            return "VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2";
+        case VK_STRUCTURE_TYPE_COPY_QVkBufferO_IMAGE_INFO_2:
+            return "VK_STRUCTURE_TYPE_COPY_QVkBufferO_IMAGE_INFO_2";
         case VK_STRUCTURE_TYPE_COPY_IMAGE_TO_BUFFER_INFO_2:
             return "VK_STRUCTURE_TYPE_COPY_IMAGE_TO_BUFFER_INFO_2";
         case VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2:
@@ -1784,10 +1784,10 @@ static inline const char* string_VkStructureType(VkStructureType input_value) {
             return "VK_STRUCTURE_TYPE_EXTERNAL_TENSOR_PROPERTIES_ARM";
         case VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_TENSOR_CREATE_INFO_ARM:
             return "VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_TENSOR_CREATE_INFO_ARM";
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_TENSOR_FEATURES_ARM:
-            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_TENSOR_FEATURES_ARM";
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_TENSOR_PROPERTIES_ARM:
-            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_TENSOR_PROPERTIES_ARM";
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_QVkBufferENSOR_FEATURES_ARM:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_QVkBufferENSOR_FEATURES_ARM";
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_QVkBufferENSOR_PROPERTIES_ARM:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_QVkBufferENSOR_PROPERTIES_ARM";
         case VK_STRUCTURE_TYPE_DESCRIPTOR_GET_TENSOR_INFO_ARM:
             return "VK_STRUCTURE_TYPE_DESCRIPTOR_GET_TENSOR_INFO_ARM";
         case VK_STRUCTURE_TYPE_TENSOR_CAPTURE_DESCRIPTOR_DATA_INFO_ARM:
@@ -10843,7 +10843,7 @@ static inline const char* string_VkStructureName(VkStructureType input_value) {
             return "VkPipelineVertexInputStateCreateInfo";
         case VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO:
             return "VkPipelineInputAssemblyStateCreateInfo";
-        case VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO:
+        case VK_STRUCTURE_TYPE_QVkPipelineESSELLATION_STATE_CREATE_INFO:
             return "VkPipelineTessellationStateCreateInfo";
         case VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO:
             return "VkPipelineViewportStateCreateInfo";
@@ -10951,7 +10951,7 @@ static inline const char* string_VkStructureName(VkStructureType input_value) {
             return "VkRenderPassInputAttachmentAspectCreateInfo";
         case VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO:
             return "VkImageViewUsageCreateInfo";
-        case VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO:
+        case VK_STRUCTURE_TYPE_QVkPipelineESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO:
             return "VkPipelineTessellationDomainOriginStateCreateInfo";
         case VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO:
             return "VkRenderPassMultiviewCreateInfo";
@@ -11167,7 +11167,7 @@ static inline const char* string_VkStructureName(VkStructureType input_value) {
             return "VkCopyImageInfo2";
         case VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2:
             return "VkBufferImageCopy2";
-        case VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2:
+        case VK_STRUCTURE_TYPE_COPY_QVkBufferO_IMAGE_INFO_2:
             return "VkCopyBufferToImageInfo2";
         case VK_STRUCTURE_TYPE_COPY_IMAGE_TO_BUFFER_INFO_2:
             return "VkCopyImageToBufferInfo2";
@@ -12647,9 +12647,9 @@ static inline const char* string_VkStructureName(VkStructureType input_value) {
             return "VkExternalTensorPropertiesARM";
         case VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_TENSOR_CREATE_INFO_ARM:
             return "VkExternalMemoryTensorCreateInfoARM";
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_TENSOR_FEATURES_ARM:
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_QVkBufferENSOR_FEATURES_ARM:
             return "VkPhysicalDeviceDescriptorBufferTensorFeaturesARM";
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_TENSOR_PROPERTIES_ARM:
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_QVkBufferENSOR_PROPERTIES_ARM:
             return "VkPhysicalDeviceDescriptorBufferTensorPropertiesARM";
         case VK_STRUCTURE_TYPE_DESCRIPTOR_GET_TENSOR_INFO_ARM:
             return "VkDescriptorGetTensorInfoARM";
