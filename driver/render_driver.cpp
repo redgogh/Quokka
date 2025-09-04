@@ -4,10 +4,10 @@
 #include "render_driver.h"
 
 #include <stdio.h>
-#include <format>
 #include "vkutils.h"
 #include "stb/stb_image.h"
 #include "utils/ioutils.h"
+#include <quokka/qk_format.h>
 
 #define VK_VERSION_1_3_216
 
@@ -1022,7 +1022,7 @@ TAG_LOAD_TEXTURE_FROM_FILE:
 void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer)
 {
     if (!pipeline->descriptorSetInfos.count(name))
-        throw std::runtime_error(std::format("[vulkan] error cannot found descriptor info by name '{}'", name));
+        throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
 
     const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
 
@@ -1045,7 +1045,7 @@ void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name,
 void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler)
 {
     if (!pipeline->descriptorSetInfos.count(name))
-        throw std::runtime_error(std::format("[vulkan] error cannot found descriptor info by name '{}'", name));
+        throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
 
     const Pipeline_T::DescriptorSetInfo& descriptorSet = pipeline->descriptorSetInfos[name];
 
