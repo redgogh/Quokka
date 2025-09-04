@@ -14,6 +14,7 @@
 #include <stb/stb_image.h>
 #include <qk_imgui/qk_imgui.h>
 
+#include "imgui/imgui_internal.h"
 #include "rendering/camera/camera.h"
 
 struct Vertex {
@@ -168,8 +169,6 @@ int main()
     while (!window->ShouldClose()) {
         glfwPollEvents();
 
-        MoveCamera(&camera, window.get());
-
         /* 计算 MVP 矩阵 */
         camera.Update();
         glm::mat4 PC_MVP = camera.GetProjectionMatrix() * camera.GetViewMatrix() * glm::mat4(1.0f);
@@ -214,6 +213,10 @@ int main()
             QkImGuiVulkanHNewFrame(cmd);
             ImGui::ShowDemoWindow(&showDemoWindow);
             if (QkImGuiBeginViewport("视口")) {
+                // 只有当焦点在 viewport 窗口上才触发 Move 操作
+                if (ImGui::IsWindowFocused())
+                    MoveCamera(&camera, window.get());
+
                 ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
                 if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
                     watchVWSize = currentVWSize;
