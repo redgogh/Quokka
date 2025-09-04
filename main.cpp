@@ -186,7 +186,7 @@ int main()
         driver->WriteBuffer(uniformBuffer, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
 
         driver->BeginCommandBuffer(v2CommandBuffer);
-        driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        driver->CmdMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
         driver->CmdBeginRendering(v2CommandBuffer, v2Texture);
 
         driver->CmdBindPipeline(v2CommandBuffer, pipeline, watchWSize.x, watchWSize.y);
@@ -196,7 +196,7 @@ int main()
         driver->CmdDrawIndexed(v2CommandBuffer, 6);
 
         driver->CmdEndRendering(v2CommandBuffer);
-        driver->CmdTextureMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        driver->CmdMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         driver->EndCommandBuffer(v2CommandBuffer);
         driver->SubmitQueue(v2CommandBuffer, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, drawFence);
         driver->WaitForFences(1, &drawFence);
@@ -205,7 +205,7 @@ int main()
         Texture2D swapChainTexture;
         driver->AcquiredNextFrame(&cmd, &swapChainTexture);
         driver->BeginCommandBuffer(cmd);
-        driver->CmdTextureMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        driver->CmdMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
         driver->CmdBeginRendering(cmd, swapChainTexture);
 
         {
@@ -232,7 +232,7 @@ int main()
         }
 
         driver->CmdEndRendering(cmd);
-        driver->CmdTextureMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        driver->CmdMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
         driver->EndCommandBuffer(cmd);
         driver->SubmitAndPresentFrame(cmd, 0, VK_NULL_HANDLE);
     }

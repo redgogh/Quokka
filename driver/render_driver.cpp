@@ -620,7 +620,7 @@ void RenderDriver::EndCommandBuffer(VkCommandBuffer commandBuffer)
     vkEndCommandBuffer(commandBuffer);
 }
 
-void RenderDriver::CmdTextureMemoryBarrier(VkCommandBuffer commandBuffer, Texture2D texture, VkImageLayout newLayout)
+void RenderDriver::CmdMemoryBarrier(VkCommandBuffer commandBuffer, Texture2D texture, VkImageLayout newLayout)
 {
     VkImageLayout oldLayout = texture->layout;
 
@@ -951,7 +951,7 @@ void RenderDriver::WriteTexture2D(Texture2D texture, uint64_t size, void *pixels
     VkCommandBuffer commandBuffer;
     BeginSingleTimeCommandBuffer(&commandBuffer);
 
-    CmdTextureMemoryBarrier(commandBuffer, texture, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    CmdMemoryBarrier(commandBuffer, texture, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
     VkBufferImageCopy copyRegion = {
         .bufferOffset = 0,
@@ -1011,7 +1011,7 @@ VkResult RenderDriver::LoadTextureFromFile(const char *filename, Texture2D *pTex
 
     VkCommandBuffer commandBuffer;
     BeginSingleTimeCommandBuffer(&commandBuffer);
-    CmdTextureMemoryBarrier(commandBuffer, *pTexture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    CmdMemoryBarrier(commandBuffer, *pTexture, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     EndSingleTimeCommandBuffer(commandBuffer);
 
 TAG_LOAD_TEXTURE_FROM_FILE:
