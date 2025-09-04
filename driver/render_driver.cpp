@@ -1076,9 +1076,9 @@ VkResult RenderDriver::_CreateInstance()
 
     VkApplicationInfo applicationInfo = {};
     applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    applicationInfo.pApplicationName = "capybara";
+    applicationInfo.pApplicationName = "Quokka";
     applicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    applicationInfo.pEngineName = "capybara";
+    applicationInfo.pEngineName = "Quokka";
     applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     applicationInfo.apiVersion = VK_API_VERSION_1_3;
 
