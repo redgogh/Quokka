@@ -18,6 +18,7 @@ public:
     void SetNear(float near);
     void SetFar(float far);
 
+    glm::vec3 GetPosition() { return position; }
     glm::vec3& GetPositionRef();
     float* GetPositionPtr();
     glm::vec3& GetDirectionRef();

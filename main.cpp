@@ -59,6 +59,38 @@ void InitQkImGui(const std::unique_ptr<RenderDriver>& driver, const std::unique_
     QkImGuiVulkanHInit(window->GetWindowHandle(), &_ImGuiVulkanInitInfo);
 }
 
+struct DragState {
+    bool dragging = false;
+    double startX = 0.0f, startY = 0.0f;
+    glm::vec3 startCameraPos{ 0.0f, 0.0f, 0.0f };
+};
+
+DragState dragState;
+
+void MoveCamera(Camera* camera, Window* window)
+{
+    static float velocity = 0.01f;
+
+    if (window->GetMouseButton(GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+        double x, y;
+        window->GetCursorPos(&x, &y);
+
+        if (!dragState.dragging) {
+            dragState.dragging = true;
+            dragState.startX = x;
+            dragState.startY = y;
+            dragState.startCameraPos = camera->GetPosition();
+        } else {
+            float dx = static_cast<float>(x - dragState.startX) * velocity;
+            float dy = static_cast<float>(y - dragState.startY) * velocity;
+            camera->SetPosition(dragState.startCameraPos + glm::vec3(-dx, dy, 0.0f));
+        }
+
+    } else {
+        dragState.dragging = false;
+    }
+}
+
 int main()
 {
 #ifdef WIN32
@@ -136,9 +168,10 @@ int main()
     while (!window->ShouldClose()) {
         glfwPollEvents();
 
-        camera.Update();
+        MoveCamera(&camera, window.get());
 
         /* 计算 MVP 矩阵 */
+        camera.Update();
         glm::mat4 PC_MVP = camera.GetProjectionMatrix() * camera.GetViewMatrix() * glm::mat4(1.0f);
 
         if (watchWSize.x != watchVWSize.x || watchWSize.y != watchVWSize.y) {

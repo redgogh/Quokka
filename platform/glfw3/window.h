@@ -5,7 +5,12 @@
 #define GLFW_INCLUDE_VULKAN
 #endif /* VK_VERSION_1_0 */
 
+#include <vector>
 #include <GLFW/glfw3.h>
+
+class Window;
+
+typedef void(*PFN_WindowKeyCallback)(Window* window, int key, int scancode, int action, int mods);
 
 class Window
 {
@@ -13,7 +18,12 @@ public:
     Window(const char* title, uint32_t w, uint32_t h);
    ~Window();
 
+    bool GetKey(int key);
+    bool GetMouseButton(int button);
     bool ShouldClose();
+    void GetCursorPos(double *x, double *y);
+
+    void RegisterKeyCallback(PFN_WindowKeyCallback callback);
 
     GLFWwindow* GetWindowHandle() const { return hwindow; }
 
@@ -36,6 +46,7 @@ public:
 
 private:
     GLFWwindow* hwindow = nullptr;
+    std::vector<PFN_WindowKeyCallback> keyCallbacks;
 };
 
 #endif /* WINDOW_H_ */
