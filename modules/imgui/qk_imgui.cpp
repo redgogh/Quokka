@@ -238,14 +238,6 @@ void QkImGuiVulkanHNewFrame(QK_MAYBE_UNUSED VkCommandBuffer commandBuffer)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    ImGuiIO& io = ImGui::GetIO();
-
-    if (ImGui::IsMouseDown(ImGuiMouseButton_Middle)) {
-        io.MouseDown[ImGuiMouseButton_Left] = true;
-    } else {
-        io.MouseDown[ImGuiMouseButton_Left] = false;
-    }
-
     // docking
     ImGui::DockSpaceOverViewport();
 }

@@ -67,7 +67,7 @@ struct DragState {
 
 DragState dragState;
 
-void MoveCamera(Camera* camera, Window* window)
+void CameraMove(Camera* camera, Window* window)
 {
     static float velocity = 0.002f;
 
@@ -81,14 +81,35 @@ void MoveCamera(Camera* camera, Window* window)
             dragState.startY = y;
             dragState.startCameraPos = camera->GetPosition();
         } else {
-            float dx = static_cast<float>(x - dragState.startX) * velocity;
-            float dy = static_cast<float>(y - dragState.startY) * velocity;
+            float distance = std::max(0.1f, camera->GetPositionRef().z);
+            float sensitivity = 0.5f * distance;
+            float dx = static_cast<float>(x - dragState.startX) * velocity * sensitivity;
+            float dy = static_cast<float>(y - dragState.startY) * velocity * sensitivity;
             camera->SetPosition(dragState.startCameraPos + glm::vec3(-dx, -dy, 0.0f));
         }
 
     } else {
         dragState.dragging = false;
     }
+}
+
+void CameraZoom(Camera* camera, Window* window)
+{
+    static float factor   = 0.05f;
+    static float velocity = 0.3f;
+    static float targetZ  = 0.0f;
+
+    glm::vec3& campos = camera->GetPositionRef();
+
+    if (targetZ == 0.0f)
+        targetZ = campos.z;
+
+    double delta = window->GetScrollY();
+
+    if (delta != 0)
+        targetZ += -(delta * velocity);
+
+    campos.z += (targetZ - campos.z) * factor;
 }
 
 int main()
@@ -212,9 +233,13 @@ int main()
             QkImGuiVulkanHNewFrame(cmd);
             ImGui::ShowDemoWindow(&showDemoWindow);
             if (QkImGuiBeginViewport("视口")) {
+                // 当鼠标在 viewport 时触发缩放操作
+                if (ImGui::IsWindowHovered())
+                    CameraZoom(&camera, window.get());
+
                 // 只有当焦点在 viewport 窗口上才触发 Move 操作
                 if (ImGui::IsWindowFocused())
-                    MoveCamera(&camera, window.get());
+                    CameraMove(&camera, window.get());
 
                 ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
                 if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)

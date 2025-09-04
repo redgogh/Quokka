@@ -25,6 +25,13 @@ Window::Window(const char *title, uint32_t w, uint32_t h)
             keyCallback(window, key, scancode, action, mods);
     });
 
+    // 注册滚轮回调事件
+    glfwSetScrollCallback(hwindow, [](GLFWwindow* hwind, double xOffset, double yOffset) {
+        Window* window = static_cast<Window *>(glfwGetWindowUserPointer(hwind));
+        window->scrollX = xOffset;
+        window->scrollY = yOffset;
+    });
+
     g_WindowCreatedCount++;
 }
 

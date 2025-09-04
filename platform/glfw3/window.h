@@ -25,6 +25,8 @@ public:
 
     void RegisterKeyCallback(PFN_WindowKeyCallback callback);
 
+    double GetScrollX() { double x = scrollX; scrollX = 0.0f; return x; }
+    double GetScrollY() { double y = scrollY; scrollY = 0.0f; return y; }
     GLFWwindow* GetWindowHandle() const { return hwindow; }
 
 #ifdef VK_VERSION_1_0
@@ -46,6 +48,8 @@ public:
 
 private:
     GLFWwindow* hwindow = nullptr;
+    double scrollX = 0.0f;
+    double scrollY = 0.0f;
     std::vector<PFN_WindowKeyCallback> keyCallbacks;
 };
 
