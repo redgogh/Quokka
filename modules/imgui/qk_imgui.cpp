@@ -279,12 +279,12 @@ bool QkImGuiBeginViewport(const char *title)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-    return QkImGuiBegin(title);
+    return ImGui::Begin(title);
 }
 
 void QkImGuiEndViewport()
 {
-    QkImGuiEnd();
+    ImGui::End();
     ImGui::PopStyleVar(2);
 }
 
