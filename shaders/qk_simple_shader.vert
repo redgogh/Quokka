@@ -4,11 +4,9 @@
 #version 450
 
 layout(location = 0) in vec2 pos;
-layout(location = 1) in vec3 color;
-layout(location = 2) in vec2 uv;
+layout(location = 1) in vec2 uv;
 
-layout(location = 0) out vec3 outColor;
-layout(location = 1) out vec2 outUV;
+layout(location = 0) out vec2 outUV;
 
 layout(set = 0, binding = 0) uniform Camera {
     mat4 mvp;
@@ -17,6 +15,5 @@ layout(set = 0, binding = 0) uniform Camera {
 void main()
 {
     gl_Position = camera.mvp * vec4(pos, 0.0f, 1.0f);
-    outColor = color;
     outUV = uv;
 }
