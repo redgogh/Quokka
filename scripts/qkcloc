@@ -1,0 +1,4 @@
+#!/bin/bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cloc "$SCRIPT_DIR/.." -exclude-dir=thirdparty,modules,cmake-build-debug,.idea
