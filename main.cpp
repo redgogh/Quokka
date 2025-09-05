@@ -40,23 +40,23 @@ void InitQkImGui(const std::unique_ptr<RenderDriver>& driver, const std::unique_
         driver->GetSwapchainFormat()
     };
 
-    ImGui_ImplVulkan_InitInfo _ImGuiVulkanInitInfo = {};
-    _ImGuiVulkanInitInfo.Instance = driver->GetInstance();
-    _ImGuiVulkanInitInfo.PhysicalDevice = driver->GetPhysicalDevice();
-    _ImGuiVulkanInitInfo.Device = driver->GetDevice();
-    _ImGuiVulkanInitInfo.QueueFamily = driver->GetQueueFamilyIndex();
-    _ImGuiVulkanInitInfo.Queue = driver->GetGraphicsQueue();
-    _ImGuiVulkanInitInfo.PipelineCache = VK_NULL_HANDLE;
-    _ImGuiVulkanInitInfo.DescriptorPool = driver->GetDescriptorPool();
-    _ImGuiVulkanInitInfo.UseDynamicRendering = VK_TRUE;
-    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    _ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
-    _ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
-    _ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
-    _ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    ImGui_ImplVulkan_InitInfo ImGuiVulkanInitInfo = {};
+    ImGuiVulkanInitInfo.Instance = driver->GetInstance();
+    ImGuiVulkanInitInfo.PhysicalDevice = driver->GetPhysicalDevice();
+    ImGuiVulkanInitInfo.Device = driver->GetDevice();
+    ImGuiVulkanInitInfo.QueueFamily = driver->GetQueueFamilyIndex();
+    ImGuiVulkanInitInfo.Queue = driver->GetGraphicsQueue();
+    ImGuiVulkanInitInfo.PipelineCache = VK_NULL_HANDLE;
+    ImGuiVulkanInitInfo.DescriptorPool = driver->GetDescriptorPool();
+    ImGuiVulkanInitInfo.UseDynamicRendering = VK_TRUE;
+    ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+    ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
+    ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
+    ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
+    ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
-    QkImGuiVulkanHInit(window->GetWindowHandle(), &_ImGuiVulkanInitInfo);
+    QkImGuiVulkanHInit(window->GetWindowHandle(), &ImGuiVulkanInitInfo);
 }
 
 struct DragState {

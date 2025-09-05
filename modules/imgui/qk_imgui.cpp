@@ -14,6 +14,7 @@
  */
 #define DRAG_SMOOTH_FACTOR 6.5f;
 
+static VkFormat* colorAttachmentFormats = nullptr;
 static GLFWwindow* g_Window = nullptr;
 
 void QkImGuiSetDarkNavUITheme()
@@ -222,12 +223,28 @@ void QkImGuiVulkanHInit(GLFWwindow* window, ImGui_ImplVulkan_InitInfo* info)
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
+    /*
+     * 为 colorAttachmentFormats 分配堆内存，避免出现内存地址不匹配问题。
+     *
+     * 因为 ImGui 的 Pipeline 创建是懒加载的，如果外面的函数被释放了这里可能会导致数组指针
+     * 的 format 格式异常。所以为了确保在 ImGui_ImplVulkan_RenderDrawData(...) 函数的
+     * 正常调用以及正常创建管线，在 qk_imgui 内部自行管理 colorAttachmentFormats。
+     */
+    const uint32_t count = info->PipelineRenderingCreateInfo.colorAttachmentCount;
+    colorAttachmentFormats = new VkFormat[count];
+
+    for (uint32_t i = 0; i < count; i++)
+        colorAttachmentFormats[i] = info->PipelineRenderingCreateInfo.pColorAttachmentFormats[i];
+
+    info->PipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
+
     ImGui_ImplGlfw_InitForVulkan(window, true);
     ImGui_ImplVulkan_Init(info);
 }
 
 void QkImGuiVulkanHTerminate()
 {
+    delete[] colorAttachmentFormats;
     ImGui_ImplGlfw_Shutdown();
     ImGui_ImplVulkan_Shutdown();
 }
