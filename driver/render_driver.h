@@ -18,6 +18,9 @@ typedef struct QVkTexture *Texture;
 typedef struct QVkBuffer *Buffer;
 typedef struct QVkPipeline *Pipeline;
 
+/* 定义 SwapchainImage 对象，因为 Texture 不太适合描述交换链图像 */
+typedef Texture SwapchainImage;
+
 VkImageView dGetVkImageView(Texture texture);
 
 class RenderDriver
@@ -68,7 +71,7 @@ public:
     void SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores);
 
     // Open APIs
-    void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture* pTexture);
+    void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, SwapchainImage* pSwapchainImage);
     void RebuildSwapchain();
     void ReadBuffer(Buffer buffer, size_t size, void* data);
     void WriteBuffer(Buffer buffer, size_t size, void* data);
@@ -107,13 +110,11 @@ private:
 
     void _DestroySwapchain();
 
-
     VkResult _InitSyncObjects();
-
     void _DestroySyncObjects();
 
     static VmaMemoryUsage _GuessMemoryUsage(VkBufferUsageFlags usage);
-    static Texture _WrapTexture(uint32_t w, uint32_t h, VkImage image, VkImageView imageView);
+    static SwapchainImage _WrapSwapchainImage(uint32_t w, uint32_t h, VkImage image, VkImageView imageView);
 
     // Vulkan handles
     VkInstance instance = VK_NULL_HANDLE;
@@ -129,7 +130,7 @@ private:
 
     // Vulkan swapchain resources
     uint32_t minImageCount = 0;
-    std::vector<Texture> swapchainTextures;
+    std::vector<SwapchainImage> listSwapchainImage;
     VkExtent2D swapchainExtent2D = {};
     uint32_t imageIndex = 0;
     std::vector<VkSemaphore> renderFinishedSemaphores;

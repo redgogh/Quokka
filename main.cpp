@@ -224,11 +224,11 @@ int main()
         driver->WaitForFences(1, &drawFence);
 
         VkCommandBuffer cmd;
-        Texture swapChainTexture;
-        driver->AcquiredNextFrame(&cmd, &swapChainTexture);
+        SwapchainImage swapchainImage;
+        driver->AcquiredNextFrame(&cmd, &swapchainImage);
         driver->BeginCommandBuffer(cmd);
-        driver->CmdMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-        driver->CmdBeginRendering(cmd, swapChainTexture);
+        driver->CmdMemoryBarrier(cmd, swapchainImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        driver->CmdBeginRendering(cmd, swapchainImage);
 
         {
             QkImGuiVulkanHNewFrame(cmd);
@@ -258,7 +258,7 @@ int main()
         }
 
         driver->CmdEndRendering(cmd);
-        driver->CmdMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        driver->CmdMemoryBarrier(cmd, swapchainImage, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
         driver->EndCommandBuffer(cmd);
         driver->SubmitAndPresentFrame(cmd, 0, VK_NULL_HANDLE);
     }

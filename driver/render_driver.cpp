@@ -874,7 +874,7 @@ void RenderDriver::SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t
     assert(!err);
 }
 
-void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture* pTexture)
+void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, SwapchainImage* pSwapchainImage)
 {
     flightIndex = (flightIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
@@ -892,7 +892,7 @@ void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture* p
         RebuildSwapchain();
 
     vkAcquireNextImageKHR(device, swapchain, UINT32_MAX, imageAvailableSemaphores[flightIndex], VK_NULL_HANDLE, &imageIndex);
-    *pTexture = swapchainTextures[imageIndex];
+    *pSwapchainImage = listSwapchainImage[imageIndex];
 }
 
 void RenderDriver::RebuildSwapchain()
@@ -1246,7 +1246,7 @@ VkResult RenderDriver::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
     err = vkGetSwapchainImagesKHR(device, swapchain, &minImageCount, nullptr);
     VK_CHECK_ERROR(err);
 
-    swapchainTextures.resize(minImageCount);
+    listSwapchainImage.resize(minImageCount);
     renderFinishedSemaphores.resize(minImageCount);
 
     std::vector<VkImage> swapchainImages(minImageCount);
@@ -1277,7 +1277,7 @@ VkResult RenderDriver::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
         err = vkCreateImageView(device, &imageViewCreateInfo, VK_NULL_HANDLE, &imageView);
         VK_CHECK_ERROR(err);
 
-        swapchainTextures[i] = _WrapTexture(swapchainExtent2D.width, swapchainExtent2D.height, swapchainImage, imageView); // NOLINT
+        listSwapchainImage[i] = _WrapSwapchainImage(swapchainExtent2D.width, swapchainExtent2D.height, swapchainImage, imageView); // NOLINT
 
         err = CreateSemaphore(&renderFinishedSemaphores[i]);
         VK_CHECK_ERROR(err);
@@ -1357,12 +1357,12 @@ VkResult RenderDriver::_CreateShaderModule(const char* path, VkShaderModule* pSh
 void RenderDriver::_DestroySwapchain()
 {
     for (uint32_t i = 0; i < minImageCount; i++) {
-        vkDestroyImageView(device, swapchainTextures[i]->vkImageView, VK_NULL_HANDLE);
-        delete swapchainTextures[i];
+        vkDestroyImageView(device, listSwapchainImage[i]->vkImageView, VK_NULL_HANDLE);
+        delete listSwapchainImage[i];
         DestroySemaphore(renderFinishedSemaphores[i]);
     }
 
-    swapchainTextures.clear();
+    listSwapchainImage.clear();
     vkDestroySwapchainKHR(device, swapchain, VK_NULL_HANDLE);
 }
 
@@ -1418,7 +1418,7 @@ VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
     return VMA_MEMORY_USAGE_CPU_TO_GPU;
 }
 
-Texture RenderDriver::_WrapTexture(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
+SwapchainImage RenderDriver::_WrapSwapchainImage(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
 {
     Texture wrapTexture = new QVkTexture;
     wrapTexture->width = w;
