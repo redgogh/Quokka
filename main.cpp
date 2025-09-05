@@ -95,7 +95,7 @@ void CameraMove(Camera* camera, Window* window)
 
 void CameraZoom(Camera* camera, Window* window)
 {
-    static float factor   = 0.05f;
+    static float factor   = 0.02f;
     static float velocity = 0.3f;
     static float targetZ  = 0.0f;
 
