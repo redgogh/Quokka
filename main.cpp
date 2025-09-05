@@ -147,14 +147,10 @@ int main()
     driver->CreatePipeline("qk_simple_shader", &pipeline);
 
     Buffer vertexBuffer;
-    size_t vertexBufferSize = sizeof(vertices);
-    driver->CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &vertexBuffer);
-    driver->WriteBuffer(vertexBuffer, vertexBufferSize, vertices);
+    driver->CreateVertexBuffer(sizeof(vertices), vertices, &vertexBuffer);
 
     Buffer indexBuffer;
-    size_t indexBufferSize = sizeof(indices);
-    driver->CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, &indexBuffer);
-    driver->WriteBuffer(indexBuffer, indexBufferSize, indices);
+    driver->CreateIndexBuffer(sizeof(indices), indices, &indexBuffer);
 
     Buffer uniformBuffer;
     driver->CreateBuffer(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &uniformBuffer);

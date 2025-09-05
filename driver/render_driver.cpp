@@ -175,6 +175,32 @@ VkResult RenderDriver::CreateBuffer(const size_t size, VkBufferUsageFlags usage,
     return err;
 }
 
+VkResult RenderDriver::CreateVertexBuffer(size_t size, void *data, Buffer *pVertexBuffer)
+{
+    VkResult err;
+
+    VkBufferUsageFlags flags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    err = CreateBuffer(size, flags, pVertexBuffer);
+    VK_CHECK_ERROR(err);
+
+    WriteBuffer(*pVertexBuffer, size, data);
+
+    return err;
+}
+
+VkResult RenderDriver::CreateIndexBuffer(size_t size, void *data, Buffer *pIndexBuffer)
+{
+    VkResult err;
+
+    VkBufferUsageFlags flags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    err = CreateBuffer(size, flags, pIndexBuffer);
+    VK_CHECK_ERROR(err);
+
+    WriteBuffer(*pIndexBuffer, size, data);
+
+    return err;
+}
+
 void RenderDriver::DestroyBuffer(Buffer buffer)
 {
     vmaDestroyBuffer(allocator, buffer->vkBuffer, buffer->allocation);

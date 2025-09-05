@@ -32,6 +32,8 @@ public:
     VkResult Initialize(VkSurfaceKHR surface);
 
     VkResult CreateBuffer(size_t size, VkBufferUsageFlags usage, Buffer *pBuffer);
+    VkResult CreateVertexBuffer(size_t size, void* data, Buffer* pVertexBuffer);
+    VkResult CreateIndexBuffer(size_t size, void* data, Buffer* pIndexBuffer);
     void DestroyBuffer(Buffer buffer);
     VkResult CreateTexture(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture *pTexture);
     void DestroyTexture(Texture Texture);
