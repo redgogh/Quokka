@@ -14,11 +14,11 @@
 #include <assert.h>
 #include <vector>
 
-typedef struct QVkTexture2D *Texture2D;
+typedef struct QVkTexture *Texture;
 typedef struct QVkBuffer *Buffer;
 typedef struct QVkPipeline *Pipeline;
 
-VkImageView dGetVkImageView(Texture2D texture);
+VkImageView dGetVkImageView(Texture texture);
 
 class RenderDriver
 {
@@ -30,8 +30,8 @@ public:
 
     VkResult CreateBuffer(size_t size, VkBufferUsageFlags usage, Buffer *pBuffer);
     void DestroyBuffer(Buffer buffer);
-    VkResult CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture2D *pTexture2D);
-    void DestroyTexture2D(Texture2D Texture2D);
+    VkResult CreateTexture(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture *pTexture);
+    void DestroyTexture(Texture Texture);
     VkResult CreateSampler(VkSampler* pSampler);
     void DestroySampler(VkSampler sampler);
     VkResult CreatePipeline(const char *shaderName, Pipeline* pPipeline);
@@ -53,8 +53,8 @@ public:
     void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);
     void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags = 0);
     void EndCommandBuffer(VkCommandBuffer commandBuffer);
-    void CmdMemoryBarrier(VkCommandBuffer commandBuffer, Texture2D texture, VkImageLayout newLayout);
-    void CmdBeginRendering(VkCommandBuffer commandBuffer, Texture2D texture);
+    void CmdMemoryBarrier(VkCommandBuffer commandBuffer, Texture texture, VkImageLayout newLayout);
+    void CmdBeginRendering(VkCommandBuffer commandBuffer, Texture texture);
     void CmdEndRendering(VkCommandBuffer commandBuffer);
     void CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h);
     void CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset);
@@ -68,20 +68,20 @@ public:
     void SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores);
 
     // Open APIs
-    void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture2D* pTexture);
+    void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture* pTexture);
     void RebuildSwapchain();
     void ReadBuffer(Buffer buffer, size_t size, void* data);
     void WriteBuffer(Buffer buffer, size_t size, void* data);
     void CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBuffer, uint64_t dstOffset, uint64_t size);
-    void WriteTexture2D(Texture2D texture, uint64_t size, void* pixels);
+    void WriteTexture(Texture texture, uint64_t size, void* pixels);
     void DeviceWaitIdle();
     void QueueWaitIdle();
     void WaitForFences(uint32_t count, const VkFence* pFences);
-    VkResult LoadTextureFromFile(const char* filename, Texture2D* pTexture);
+    VkResult LoadTextureFromFile(const char* filename, Texture* pTexture);
 
     // pipeline bind
     void BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer);
-    void BindTexture(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler);
+    void BindTexture(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler);
 
     VkInstance GetInstance() const { return instance; }
     VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }
@@ -94,7 +94,7 @@ public:
     VkExtent2D GetSwapchainExtent2D() const { return swapchainExtent2D; }
     float GetSwapchainAspectRatio() const { return swapchainExtent2D.width / swapchainExtent2D.height; }
     VkFormat GetSwapchainFormat() const { return surfaceFormat.format; }
-    VkImageView GetVkImageViewHandle(Texture2D texture) const;
+    VkImageView GetVkImageViewHandle(Texture texture) const;
 
 private:
     VkResult _CreateInstance();
@@ -113,7 +113,7 @@ private:
     void _DestroySyncObjects();
 
     static VmaMemoryUsage _GuessMemoryUsage(VkBufferUsageFlags usage);
-    static Texture2D _WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView);
+    static Texture _WrapTexture(uint32_t w, uint32_t h, VkImage image, VkImageView imageView);
 
     // Vulkan handles
     VkInstance instance = VK_NULL_HANDLE;
@@ -129,7 +129,7 @@ private:
 
     // Vulkan swapchain resources
     uint32_t minImageCount = 0;
-    std::vector<Texture2D> swapchainTextures;
+    std::vector<Texture> swapchainTextures;
     VkExtent2D swapchainExtent2D = {};
     uint32_t imageIndex = 0;
     std::vector<VkSemaphore> renderFinishedSemaphores;

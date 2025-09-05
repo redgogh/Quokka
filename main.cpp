@@ -169,10 +169,11 @@ int main()
     VkCommandBuffer v2CommandBuffer;
     driver->CreateCommandBuffer(&v2CommandBuffer);
 
-    Texture2D v2Texture;
+    Texture v2Texture;
     ImVec2 watchWSize(32, 32);
     ImVec2 watchVWSize(32, 32);
-    driver->CreateTexture2D(watchWSize.x, watchWSize.y, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
+    driver->CreateTexture(static_cast<uint32_t>(watchWSize.x), static_cast<uint32_t>(watchWSize.y), VK_FORMAT_B8G8R8A8_UNORM,
+                          VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
 
     VkSampler sampler;
     driver->CreateSampler(&sampler);
@@ -180,7 +181,7 @@ int main()
     VkFence drawFence;
     driver->CreateFence(&drawFence);
 
-    Texture2D quokkaLogo;
+    Texture quokkaLogo;
     driver->LoadTextureFromFile("../misc/quokka_1.png", &quokkaLogo);
     driver->BindTexture(pipeline, "tex", quokkaLogo, sampler);
 
@@ -198,8 +199,8 @@ int main()
             camera.SetAspectRatio(watchWSize.x / watchWSize.y);
             driver->DeviceWaitIdle();
             QkImGuiRemoveTexture(imTextureId);
-            driver->DestroyTexture2D(v2Texture);
-            driver->CreateTexture2D(watchWSize.x, watchWSize.y, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
+            driver->DestroyTexture(v2Texture);
+            driver->CreateTexture(watchWSize.x, watchWSize.y, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
             imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
 
@@ -223,7 +224,7 @@ int main()
         driver->WaitForFences(1, &drawFence);
 
         VkCommandBuffer cmd;
-        Texture2D swapChainTexture;
+        Texture swapChainTexture;
         driver->AcquiredNextFrame(&cmd, &swapChainTexture);
         driver->BeginCommandBuffer(cmd);
         driver->CmdMemoryBarrier(cmd, swapChainTexture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
@@ -266,9 +267,9 @@ int main()
 
     QkImGuiVulkanHTerminate();
 
-    driver->DestroyTexture2D(quokkaLogo);
+    driver->DestroyTexture(quokkaLogo);
     driver->DestroyFence(drawFence);
-    driver->DestroyTexture2D(v2Texture);
+    driver->DestroyTexture(v2Texture);
     driver->DestroySampler(sampler);
     driver->DestroyPipeline(pipeline);
     driver->DestroyBuffer(uniformBuffer);

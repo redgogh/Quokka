@@ -18,7 +18,7 @@
 /* volk 全局只初始化一次 */
 static bool volkInitialized = false;
 
-struct QVkTexture2D {
+struct QVkTexture {
     VkImage vkImage = VK_NULL_HANDLE;
     VkImageView vkImageView = VK_NULL_HANDLE;
     VmaAllocation allocation = VK_NULL_HANDLE;
@@ -53,7 +53,7 @@ struct QVkPipeline {
     VkPipelineBindPoint vkBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 };
 
-VkImageView dGetVkImageView(Texture2D texture)
+VkImageView dGetVkImageView(Texture texture)
 {
     return texture->vkImageView;
 }
@@ -181,7 +181,7 @@ void RenderDriver::DestroyBuffer(Buffer buffer)
     delete buffer;
 }
 
-VkResult RenderDriver::CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture2D *pTexture2D)
+VkResult RenderDriver::CreateTexture(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture *pTexture)
 {
     VkResult err;
 
@@ -223,21 +223,21 @@ VkResult RenderDriver::CreateTexture2D(uint32_t w, uint32_t h, VkFormat format, 
     err = vkCreateImageView(device, &imageViewCreateInfo, VK_NULL_HANDLE, &imageView);
     VK_CHECK_ERROR(err);
 
-    *pTexture2D = new QVkTexture2D;
+    *pTexture = new QVkTexture;
 
-    (*pTexture2D)->vkImage = image;
-    (*pTexture2D)->vkImageView = imageView;
-    (*pTexture2D)->allocation = allocation;
-    (*pTexture2D)->allocationInfo = allocationInfo;
-    (*pTexture2D)->width = w;
-    (*pTexture2D)->height = h;
-    (*pTexture2D)->format = format;
-    (*pTexture2D)->layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    (*pTexture)->vkImage = image;
+    (*pTexture)->vkImageView = imageView;
+    (*pTexture)->allocation = allocation;
+    (*pTexture)->allocationInfo = allocationInfo;
+    (*pTexture)->width = w;
+    (*pTexture)->height = h;
+    (*pTexture)->format = format;
+    (*pTexture)->layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
     return err;
 }
 
-void RenderDriver::DestroyTexture2D(Texture2D texture2D)
+void RenderDriver::DestroyTexture(Texture texture2D)
 {
     vmaDestroyImage(allocator, texture2D->vkImage, texture2D->allocation);
     vkDestroyImageView(device, texture2D->vkImageView, VK_NULL_HANDLE);
@@ -620,7 +620,7 @@ void RenderDriver::EndCommandBuffer(VkCommandBuffer commandBuffer)
     vkEndCommandBuffer(commandBuffer);
 }
 
-void RenderDriver::CmdMemoryBarrier(VkCommandBuffer commandBuffer, Texture2D texture, VkImageLayout newLayout)
+void RenderDriver::CmdMemoryBarrier(VkCommandBuffer commandBuffer, Texture texture, VkImageLayout newLayout)
 {
     VkImageLayout oldLayout = texture->layout;
 
@@ -712,7 +712,7 @@ DO_MEMORY_IAMGE_BARRIER_TAG:
     texture->layout = newLayout;
 }
 
-void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer, Texture2D texture)
+void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer, Texture texture)
 {
     VkRenderingAttachmentInfo colorRenderingAttachment = {
         .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -874,7 +874,7 @@ void RenderDriver::SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t
     assert(!err);
 }
 
-void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture2D* pTexture)
+void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, Texture* pTexture)
 {
     flightIndex = (flightIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
@@ -942,7 +942,7 @@ void RenderDriver::CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBu
     EndSingleTimeCommandBuffer(commandBuffer);
 }
 
-void RenderDriver::WriteTexture2D(Texture2D texture, uint64_t size, void *pixels)
+void RenderDriver::WriteTexture(Texture texture, uint64_t size, void *pixels)
 {
     Buffer stagingBuffer;
     CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &stagingBuffer);
@@ -995,19 +995,19 @@ void RenderDriver::WaitForFences(uint32_t count, const VkFence *pFences)
     vkWaitForFences(device, count, pFences, VK_TRUE, UINT64_MAX);
 }
 
-VkResult RenderDriver::LoadTextureFromFile(const char *filename, Texture2D *pTexture)
+VkResult RenderDriver::LoadTextureFromFile(const char *filename, Texture *pTexture)
 {
     VkResult err;
 
     int w, h, channel;
     stbi_uc* pixels = stbi_load(filename, &w, &h, &channel, STBI_rgb_alpha);
 
-    err = CreateTexture2D(w, h, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pTexture);
+    err = CreateTexture(w, h, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pTexture);
 
     if (err != VK_SUCCESS)
         goto TAG_LOAD_TEXTURE_FROM_FILE;
 
-    WriteTexture2D(*pTexture, w * h * 4, pixels);
+    WriteTexture(*pTexture, w * h * 4, pixels);
 
     VkCommandBuffer commandBuffer;
     BeginSingleTimeCommandBuffer(&commandBuffer);
@@ -1042,7 +1042,7 @@ void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name,
     vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
 }
 
-void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Texture2D texture, VkSampler sampler)
+void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler)
 {
     if (!pipeline->descriptorSetInfos.contains(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
@@ -1065,7 +1065,7 @@ void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Textu
     vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
 }
 
-VkImageView RenderDriver::GetVkImageViewHandle(Texture2D texture) const
+VkImageView RenderDriver::GetVkImageViewHandle(Texture texture) const
 {
     return texture->vkImageView;
 }
@@ -1277,7 +1277,7 @@ VkResult RenderDriver::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
         err = vkCreateImageView(device, &imageViewCreateInfo, VK_NULL_HANDLE, &imageView);
         VK_CHECK_ERROR(err);
 
-        swapchainTextures[i] = _WrapTexture2D(swapchainExtent2D.width, swapchainExtent2D.height, swapchainImage, imageView); // NOLINT
+        swapchainTextures[i] = _WrapTexture(swapchainExtent2D.width, swapchainExtent2D.height, swapchainImage, imageView); // NOLINT
 
         err = CreateSemaphore(&renderFinishedSemaphores[i]);
         VK_CHECK_ERROR(err);
@@ -1418,9 +1418,9 @@ VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
     return VMA_MEMORY_USAGE_CPU_TO_GPU;
 }
 
-Texture2D RenderDriver::_WrapTexture2D(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
+Texture RenderDriver::_WrapTexture(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
 {
-    Texture2D wrapTexture = new QVkTexture2D;
+    Texture wrapTexture = new QVkTexture;
     wrapTexture->width = w;
     wrapTexture->height = h;
     wrapTexture->vkImage = image;
