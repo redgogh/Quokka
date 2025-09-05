@@ -32,8 +32,8 @@ public:
     VkResult Initialize(VkSurfaceKHR surface);
 
     VkResult CreateBuffer(size_t size, VkBufferUsageFlags usage, Buffer *pBuffer);
-    VkResult CreateVertexBuffer(size_t size, void* data, Buffer* pVertexBuffer);
-    VkResult CreateIndexBuffer(size_t size, void* data, Buffer* pIndexBuffer);
+    VkResult CreateVertexBuffer(size_t size, const void* data, Buffer* pVertexBuffer);
+    VkResult CreateIndexBuffer(size_t size, const void* data, Buffer* pIndexBuffer);
     void DestroyBuffer(Buffer buffer);
     VkResult CreateTexture(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture *pTexture);
     void DestroyTexture(Texture Texture);
@@ -76,7 +76,7 @@ public:
     void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, SwapchainImage* pSwapchainImage);
     void RebuildSwapchain();
     void ReadBuffer(Buffer buffer, size_t size, void* data);
-    void WriteBuffer(Buffer buffer, size_t size, void* data);
+    void WriteBuffer(Buffer buffer, size_t size, const void* data);
     void CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBuffer, uint64_t dstOffset, uint64_t size);
     void WriteTexture(Texture texture, uint64_t size, void* pixels);
     void DeviceWaitIdle();

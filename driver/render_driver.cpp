@@ -175,7 +175,7 @@ VkResult RenderDriver::CreateBuffer(const size_t size, VkBufferUsageFlags usage,
     return err;
 }
 
-VkResult RenderDriver::CreateVertexBuffer(size_t size, void *data, Buffer *pVertexBuffer)
+VkResult RenderDriver::CreateVertexBuffer(size_t size, const void *data, Buffer *pVertexBuffer)
 {
     VkResult err;
 
@@ -188,7 +188,7 @@ VkResult RenderDriver::CreateVertexBuffer(size_t size, void *data, Buffer *pVert
     return err;
 }
 
-VkResult RenderDriver::CreateIndexBuffer(size_t size, void *data, Buffer *pIndexBuffer)
+VkResult RenderDriver::CreateIndexBuffer(size_t size, const void *data, Buffer *pIndexBuffer)
 {
     VkResult err;
 
@@ -934,7 +934,7 @@ void RenderDriver::ReadBuffer(Buffer buffer, size_t size, void *data)
     vmaUnmapMemory(allocator, buffer->allocation);
 }
 
-void RenderDriver::WriteBuffer(Buffer buffer, size_t size, void *data)
+void RenderDriver::WriteBuffer(Buffer buffer, size_t size, const void *data)
 {
     if (buffer->memoryUsage == VMA_MEMORY_USAGE_GPU_ONLY) {
         Buffer stagingBuffer;
