@@ -93,25 +93,6 @@ void CameraMove(Camera* camera, Window* window)
     }
 }
 
-void CameraZoom(Camera* camera, Window* window)
-{
-    static float factor   = 0.02f;
-    static float velocity = 0.3f;
-    static float targetZ  = 0.0f;
-
-    glm::vec3& campos = camera->GetPositionRef();
-
-    if (targetZ == 0.0f)
-        targetZ = campos.z;
-
-    double delta = window->GetScrollY();
-
-    if (delta != 0)
-        targetZ += -(delta * velocity);
-
-    campos.z += (targetZ - campos.z) * factor;
-}
-
 int main()
 {
 #ifdef WIN32
@@ -158,6 +139,27 @@ int main()
 
     float aspectRatio = driver->GetSwapchainAspectRatio();
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), aspectRatio);
+
+    window->SetUserContextData("camera", &camera);
+    window->RegisterScrollCallback([](Window* window, double xOffset, double yOffset) {
+       Camera* camera = static_cast<Camera*>(window->GetUserContextData("camera"));
+
+        static float factor   = 0.02f;
+        static float velocity = 0.3f;
+        static float targetZ  = 0.0f;
+
+        glm::vec3& campos = camera->GetPositionRef();
+
+        if (targetZ == 0.0f)
+            targetZ = campos.z;
+
+        double delta = yOffset;
+
+        if (delta != 0)
+            targetZ += -(delta * velocity);
+
+        campos.z += (targetZ - campos.z) * factor;
+    });
 
     bool showDemoWindow = true;
 
@@ -230,10 +232,6 @@ int main()
             QkImGuiVulkanHNewFrame(cmd);
             ImGui::ShowDemoWindow(&showDemoWindow);
             if (QkImGuiBeginViewport("视口")) {
-                // 当鼠标在 viewport 时触发缩放操作
-                if (ImGui::IsWindowHovered())
-                    CameraZoom(&camera, window.get());
-
                 // 只有当焦点在 viewport 窗口上才触发 Move 操作
                 if (ImGui::IsWindowFocused())
                     CameraMove(&camera, window.get());

@@ -5,12 +5,17 @@
 #define GLFW_INCLUDE_VULKAN
 #endif /* VK_VERSION_1_0 */
 
-#include <vector>
 #include <GLFW/glfw3.h>
+
+// std
+#include <unordered_map>
+#include <vector>
+#include <string>
 
 class Window;
 
 typedef void(*PFN_WindowKeyCallback)(Window* window, int key, int scancode, int action, int mods);
+typedef void(*PFN_ScrollKeyCallback)(Window* window, double xOffset, double yOffset);
 
 class Window
 {
@@ -23,7 +28,11 @@ public:
     bool ShouldClose() const;
     void GetCursorPos(double *x, double *y) const;
 
+    void SetUserContextData(const std::string& name, void* data);
+    void* GetUserContextData(const std::string& name);
+
     void RegisterKeyCallback(PFN_WindowKeyCallback callback);
+    void RegisterScrollCallback(PFN_ScrollKeyCallback callback);
 
     GLFWwindow* GetWindowHandle() const { return hwindow; }
 
@@ -46,7 +55,9 @@ public:
 
 private:
     GLFWwindow* hwindow = nullptr;
+    std::unordered_map<std::string, void*> userData;
     std::vector<PFN_WindowKeyCallback> keyCallbacks;
+    std::vector<PFN_ScrollKeyCallback> scrollCallbacks;
 };
 
 #endif /* WINDOW_H_ */

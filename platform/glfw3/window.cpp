@@ -28,6 +28,8 @@ Window::Window(const char *title, uint32_t w, uint32_t h)
     // 注册滚轮回调事件
     glfwSetScrollCallback(hwindow, [](GLFWwindow* hwind, double xOffset, double yOffset) {
         Window* window = static_cast<Window *>(glfwGetWindowUserPointer(hwind));
+        for (auto scrollCallback : window->scrollCallbacks)
+            scrollCallback(window, xOffset, yOffset);
     });
 
     g_WindowCreatedCount++;
@@ -60,6 +62,21 @@ bool Window::ShouldClose() const
 void Window::GetCursorPos(double *x, double *y) const
 {
     glfwGetCursorPos(hwindow, x, y);
+}
+
+void Window::SetUserContextData(const std::string &name, void *data)
+{
+    userData[name] = data;
+}
+
+void *Window::GetUserContextData(const std::string &name)
+{
+    return userData[name];
+}
+
+void Window::RegisterScrollCallback(PFN_ScrollKeyCallback callback)
+{
+    scrollCallbacks.push_back(callback);
 }
 
 void Window::RegisterKeyCallback(PFN_WindowKeyCallback callback)
