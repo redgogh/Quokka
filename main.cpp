@@ -46,7 +46,7 @@ void CameraMove(Camera* camera, Dispatcher* dispatcher)
 {
     static float velocity = 0.002f;
 
-    if (dispatcher->IsMouseButtonHeld(GLFW_MOUSE_BUTTON_3)) {
+    if (dispatcher->IsKeyHeld(GLFW_KEY_LEFT_ALT) && dispatcher->IsMouseButtonHeld(GLFW_MOUSE_BUTTON_3)) {
         double x = dispatcher->GetMouseX();
         double y = dispatcher->GetMouseY();
 
@@ -74,17 +74,19 @@ void CameraScroll(Camera* camera, Dispatcher* dispatcher)
     static float velocity = 0.3f;
     static float targetZ  = 0.0f;
 
-    glm::vec3& campos = camera->GetPositionRef();
+    if (dispatcher->IsKeyHeld(GLFW_KEY_LEFT_ALT)) {
+        glm::vec3 &campos = camera->GetPositionRef();
 
-    if (targetZ == 0.0f)
-        targetZ = campos.z;
+        if (targetZ == 0.0f)
+            targetZ = campos.z;
 
-    double delta = dispatcher->GetScrollY();
+        double delta = dispatcher->GetScrollY();
 
-    if (delta != 0)
-        targetZ += -(delta * velocity);
+        if (delta != 0)
+            targetZ += -(delta * velocity);
 
-    campos.z += (targetZ - campos.z) * factor;
+        campos.z += (targetZ - campos.z) * factor;
+    }
 }
 
 int main()
