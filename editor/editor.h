@@ -37,7 +37,6 @@ public:
 private:
     RenderDriver* driver = VK_NULL_HANDLE;
     Window* hwnd = VK_NULL_HANDLE;
-    VkSampler sampler2D = VK_NULL_HANDLE;
     std::unordered_map<std::string, EditorWindow> viewports;
     std::unordered_map<std::string, EditorWindow> windows;
 

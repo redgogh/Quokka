@@ -42,7 +42,7 @@ public:
     void DestroyBuffer(Buffer buffer);
     VkResult CreateTexture(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture *pTexture);
     void DestroyTexture(Texture Texture);
-    VkResult CreateSampler(VkSampler* pSampler);
+    VkResult CreateSampler(VkFilter filter, VkSamplerAddressMode addressMode, bool enableAnisotropy, float maxAnisotropy, bool useMipmaps, VkSampler* pSampler);
     void DestroySampler(VkSampler sampler);
     VkResult CreatePipeline(const char *shaderName, Pipeline* pPipeline);
     void DestroyPipeline(Pipeline pipeline);
@@ -106,6 +106,8 @@ public:
     float GetSwapchainAspectRatio() const { return swapchainExtent2D.width / swapchainExtent2D.height; }
     VkFormat GetSwapchainFormat() const { return surfaceFormat.format; }
     VkImageView GetVkImageViewHandle(Texture texture) const;
+    VkSampler GetLinearRepeatSampler() { return linearRepeatSampler; }
+    VkSampler GetNearestClampSampler() { return nearestClampSampler; }
 
 private:
     VkResult _CreateInstance();
@@ -120,6 +122,9 @@ private:
 
     VkResult _InitSyncObjects();
     void _DestroySyncObjects();
+
+    VkResult _PerInitSamplers();
+    void _DestroyPerInitSamplers();
 
     static VmaMemoryUsage _GuessMemoryUsage(VkBufferUsageFlags usage);
     static SwapchainImage _WrapSwapchainImage(uint32_t w, uint32_t h, VkImage image, VkImageView imageView);
@@ -153,6 +158,10 @@ private:
     uint32_t queueFamilyIndex = UINT32_MAX;
     VkSurfaceFormatKHR surfaceFormat = {};
     VkPhysicalDeviceProperties physicalDeviceProperties = {};
+
+    /* sampler */
+    VkSampler linearRepeatSampler = VK_NULL_HANDLE;
+    VkSampler nearestClampSampler = VK_NULL_HANDLE;
 };
 
 #endif /* RENDER_DRIVER_H_ */

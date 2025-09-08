@@ -99,6 +99,8 @@ RenderDriver::~RenderDriver()
 {
     vkDeviceWaitIdle(device);
 
+    _DestroyPerInitSamplers();
+
     DestroyFence(submitFence);
     _DestroySyncObjects();
     vkDestroyDescriptorPool(device, descriptorPool, VK_NULL_HANDLE);
@@ -136,6 +138,9 @@ VkResult RenderDriver::Initialize(VkSurfaceKHR surface)
     VK_CHECK_ERROR(err);
 
     err = CreateFence(&submitFence);
+    VK_CHECK_ERROR(err);
+
+    err = _PerInitSamplers();
     VK_CHECK_ERROR(err);
 
     printf("[vulkan] render driver for vulkan initialized\n");
@@ -275,27 +280,27 @@ void RenderDriver::DestroyTexture(Texture texture2D)
     delete texture2D;
 }
 
-VkResult RenderDriver::CreateSampler(VkSampler *pSampler)
+VkResult RenderDriver::CreateSampler(VkFilter filter, VkSamplerAddressMode addressMode, bool enableAnisotropy, float maxAnisotropy, bool useMipmaps, VkSampler* pSampler)
 {
     VkResult err;
 
     VkSamplerCreateInfo samplerCreateInfo = {};
     samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-    samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-    samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.anisotropyEnable = VK_FALSE;
-    samplerCreateInfo.maxAnisotropy = 16;
+    samplerCreateInfo.magFilter = filter;
+    samplerCreateInfo.minFilter = filter;
+    samplerCreateInfo.addressModeU = addressMode;
+    samplerCreateInfo.addressModeV = addressMode;
+    samplerCreateInfo.addressModeW = addressMode;
+    samplerCreateInfo.anisotropyEnable = enableAnisotropy ? VK_TRUE : VK_FALSE;
+    samplerCreateInfo.maxAnisotropy = maxAnisotropy;
     samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
     samplerCreateInfo.compareEnable = VK_FALSE;
     samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerCreateInfo.mipmapMode = useMipmaps ? VK_SAMPLER_MIPMAP_MODE_NEAREST : VK_SAMPLER_MIPMAP_MODE_LINEAR;
     samplerCreateInfo.mipLodBias = 0.0f;
     samplerCreateInfo.minLod = 0.0f;
-    samplerCreateInfo.maxLod = 0.0f;
+    samplerCreateInfo.maxLod = useMipmaps ? VK_LOD_CLAMP_NONE : 0.0f;
 
     err = vkCreateSampler(device, &samplerCreateInfo, VK_NULL_HANDLE, pSampler);
     VK_CHECK_ERROR(err);
@@ -1427,6 +1432,25 @@ void RenderDriver::_DestroySyncObjects()
         DestroyFence(inFlightFences[i]);
         DestroySemaphore(imageAvailableSemaphores[i]);
     }
+}
+
+VkResult RenderDriver::_PerInitSamplers()
+{
+    VkResult err;
+
+    err = CreateSampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, true, 16.0f, true, &linearRepeatSampler);
+    VK_CHECK_ERROR(err);
+
+    err = CreateSampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, 1.0f, false, &nearestClampSampler);
+    VK_CHECK_ERROR(err);
+
+    return err;
+}
+
+void RenderDriver::_DestroyPerInitSamplers()
+{
+    DestroySampler(linearRepeatSampler);
+    DestroySampler(linearRepeatSampler);
 }
 
 VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)

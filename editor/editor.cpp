@@ -24,17 +24,11 @@ GameEditor::GameEditor(RenderDriver* pDriver, Window* pWindow)
     ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
     QkImGuiVulkanHInit(hwnd->GetWindowHandle(), &ImGuiVulkanInitInfo);
-
-    /* 初始化默认采样器 */
-    driver->CreateSampler(&sampler2D);
 }
 
 GameEditor::~GameEditor()
 {
     QkImGuiVulkanHTerminate();
-
-    /* 销毁默认采样器 */
-    driver->DestroySampler(sampler2D);
 }
 
 void GameEditor::BeginNewFrame(VkCommandBuffer commandBuffer)
@@ -81,7 +75,7 @@ void GameEditor::RegisterViewport(const std::string &name, std::function<void()>
 
 ImTextureID GameEditor::CreateTextureId(Texture texture)
 {
-    return QkImGuiAddTexture(sampler2D, dGetVkImageView(texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    return QkImGuiAddTexture(driver->GetLinearRepeatSampler(), dGetVkImageView(texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void GameEditor::DestroyTextureId(ImTextureID textureId)

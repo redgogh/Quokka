@@ -147,15 +147,12 @@ int main()
     driver->CreateTexture(static_cast<uint32_t>(watchWSize.x), static_cast<uint32_t>(watchWSize.y), VK_FORMAT_B8G8R8A8_UNORM,
                           VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
 
-    VkSampler sampler;
-    driver->CreateSampler(&sampler);
-
     VkFence drawFence;
     driver->CreateFence(&drawFence);
 
     Texture quokkaLogo;
     driver->LoadTextureFromFile("../misc/quokka_1.png", &quokkaLogo);
-    driver->BindTexture(pipeline, "tex", quokkaLogo, sampler);
+    driver->BindTexture(pipeline, "tex", quokkaLogo, driver->GetLinearRepeatSampler());
 
     ImTextureID textureId = editor->CreateTextureId(v2Texture);
 
@@ -240,7 +237,6 @@ int main()
     driver->DestroyTexture(quokkaLogo);
     driver->DestroyFence(drawFence);
     driver->DestroyTexture(v2Texture);
-    driver->DestroySampler(sampler);
     driver->DestroyPipeline(pipeline);
     driver->DestroyBuffer(uniformBuffer);
     driver->DestroyBuffer(vertexBuffer);
