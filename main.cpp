@@ -14,8 +14,8 @@
 #include <stb/stb_image.h>
 
 #include "rendering/camera/camera.h"
-#include "event/dispatcher.h"
-#include "editor/editor.h"
+#include "platform/event/dispatcher.h"
+#include "ui/editor/editor.h"
 
 struct Vertex {
     glm::vec2 pos;

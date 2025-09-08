@@ -19,7 +19,7 @@ FILE(GLOB_RECURSE SOURCES
   "driver/*.cpp"
   "platform/*.cpp"
   "rendering/*.cpp"
-  "editor/*.cpp"
+  "ui/*.cpp"
   "event/*.cpp"
   "main.cpp"
 )
