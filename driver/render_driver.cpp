@@ -53,6 +53,11 @@ struct QVkPipeline {
     VkPipelineBindPoint vkBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 };
 
+VkImage dGetVkImage(Texture texture)
+{
+    return texture->vkImage;
+}
+
 VkImageView dGetVkImageView(Texture texture)
 {
     return texture->vkImageView;

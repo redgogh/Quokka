@@ -21,6 +21,10 @@ typedef struct QVkPipeline *Pipeline;
 /* 定义 SwapchainImage 对象，因为 Texture 不太适合描述交换链图像 */
 typedef Texture SwapchainImage;
 
+/* dGetVkImage 函数用于在不依赖 RenderDriver 的情况下获取 Vulkan 原生 VkImage 对象 */
+VkImage dGetVkImage(Texture texture);
+
+/* dGetVkImageView 函数用于在不依赖 RenderDriver 的情况下获取 Vulkan 原生 VkImageView 对象 */
 VkImageView dGetVkImageView(Texture texture);
 
 class RenderDriver
@@ -31,6 +35,7 @@ public:
 
     VkResult Initialize(VkSurfaceKHR surface);
 
+    /* 与 Vulkan 资源创建和释放相关的函数  */
     VkResult CreateBuffer(size_t size, VkBufferUsageFlags usage, Buffer *pBuffer);
     VkResult CreateVertexBuffer(size_t size, const void* data, Buffer* pVertexBuffer);
     VkResult CreateIndexBuffer(size_t size, const void* data, Buffer* pIndexBuffer);
@@ -53,7 +58,7 @@ public:
     VkResult CreateDescriptorSets(uint32_t descriptorSetCount, const VkDescriptorSetLayout* pDescriptorSetLayouts, VkDescriptorSet *pDescriptorSets);
     void DestroyDescriptorSets(uint32_t descriptorSetCount, VkDescriptorSet* pDescriptorSets);
 
-    // Vulkan commands
+    /* Vulkan 命令相关函数 */
     void BeginSingleTimeCommandBuffer(VkCommandBuffer* pCommandBuffer);
     void EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer);
     void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags = 0);
@@ -72,7 +77,7 @@ public:
     void SubmitQueue(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, uint32_t signalSemaphoreCount, const VkSemaphore* pSignalSemaphores, VkFence fence);
     void SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores);
 
-    // Open APIs
+    /* 自定义封装开放 API */
     void AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, SwapchainImage* pSwapchainImage);
     void RebuildSwapchain();
     void ReadBuffer(Buffer buffer, size_t size, void* data);
@@ -84,10 +89,11 @@ public:
     void WaitForFences(uint32_t count, const VkFence* pFences);
     VkResult LoadTextureFromFile(const char* filename, Texture* pTexture);
 
-    // pipeline bind
+    /* 渲染管线绑定函数，与 Vulkan 中的描述符绑定相关 */
     void BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer);
     void BindTexture(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler);
 
+    /* Vulkan 对象资源句斌获取函数 */
     VkInstance GetInstance() const { return instance; }
     VkPhysicalDevice GetPhysicalDevice() const { return physicalDevice; }
     uint32_t GetQueueFamilyIndex() const { return queueFamilyIndex; }
