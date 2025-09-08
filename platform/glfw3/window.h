@@ -18,15 +18,13 @@ public:
     Window(const char* title, uint32_t w, uint32_t h);
    ~Window();
 
-    bool GetKey(int key);
-    bool GetMouseButton(int button);
-    bool ShouldClose();
-    void GetCursorPos(double *x, double *y);
+    bool GetKey(int key) const;
+    bool GetMouseButton(int button) const;
+    bool ShouldClose() const;
+    void GetCursorPos(double *x, double *y) const;
 
     void RegisterKeyCallback(PFN_WindowKeyCallback callback);
 
-    double GetScrollX() { double x = scrollX; scrollX = 0.0f; return x; }
-    double GetScrollY() { double y = scrollY; scrollY = 0.0f; return y; }
     GLFWwindow* GetWindowHandle() const { return hwindow; }
 
 #ifdef VK_VERSION_1_0
@@ -48,8 +46,6 @@ public:
 
 private:
     GLFWwindow* hwindow = nullptr;
-    double scrollX = 0.0f;
-    double scrollY = 0.0f;
     std::vector<PFN_WindowKeyCallback> keyCallbacks;
 };
 
