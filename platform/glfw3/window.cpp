@@ -25,11 +25,26 @@ Window::Window(const char *title, uint32_t w, uint32_t h)
             keyCallback(window, key, scancode, action, mods);
     });
 
+    // 注册鼠标按钮事件回调函数
+    glfwSetMouseButtonCallback(hwindow, [](GLFWwindow* hwind, int button, int action, int mods) {
+        Window* window = static_cast<Window *>(glfwGetWindowUserPointer(hwind));
+        std::vector<PFN_WindowMouseButtonCallback> callbacks = window->mouseButtonCallbacks;
+        for (auto mouseButtonCallback : callbacks)
+            mouseButtonCallback(window, button, action, mods);
+    });
+
     // 注册滚轮回调事件
     glfwSetScrollCallback(hwindow, [](GLFWwindow* hwind, double xOffset, double yOffset) {
         Window* window = static_cast<Window *>(glfwGetWindowUserPointer(hwind));
         for (auto scrollCallback : window->scrollCallbacks)
             scrollCallback(window, xOffset, yOffset);
+    });
+
+    // 注册鼠标移动回调事件
+    glfwSetCursorPosCallback(hwindow, [](GLFWwindow* hwind, double xOffset, double yOffset) {
+        Window* window = static_cast<Window *>(glfwGetWindowUserPointer(hwind));
+        for (auto cursorPosCallback : window->cursorPosCallbacks)
+            cursorPosCallback(window, xOffset, yOffset);
     });
 
     g_WindowCreatedCount++;
@@ -74,12 +89,22 @@ void *Window::GetUserContextData(const std::string &name)
     return userData[name];
 }
 
+void Window::RegisterKeyCallback(PFN_WindowKeyCallback callback)
+{
+    keyCallbacks.push_back(callback);
+}
+
+void Window::RegisterMouseButtonCallback(PFN_WindowMouseButtonCallback callback)
+{
+    mouseButtonCallbacks.push_back(callback);
+}
+
 void Window::RegisterScrollCallback(PFN_ScrollKeyCallback callback)
 {
     scrollCallbacks.push_back(callback);
 }
 
-void Window::RegisterKeyCallback(PFN_WindowKeyCallback callback)
+void Window::RegisterCursorPosCallback(PFN_CursorPosCallback callback)
 {
-    keyCallbacks.push_back(callback);
+    cursorPosCallbacks.push_back(callback);
 }

@@ -15,7 +15,9 @@
 class Window;
 
 typedef void(*PFN_WindowKeyCallback)(Window* window, int key, int scancode, int action, int mods);
+typedef void(*PFN_WindowMouseButtonCallback)(Window* window, int button, int action, int mods);
 typedef void(*PFN_ScrollKeyCallback)(Window* window, double xOffset, double yOffset);
+typedef void(*PFN_CursorPosCallback)(Window* window, double xOffset, double yOffset);
 
 class Window
 {
@@ -35,7 +37,9 @@ public:
 
     /* 注册各个事件回调函数 */
     void RegisterKeyCallback(PFN_WindowKeyCallback callback);
+    void RegisterMouseButtonCallback(PFN_WindowMouseButtonCallback callback);
     void RegisterScrollCallback(PFN_ScrollKeyCallback callback);
+    void RegisterCursorPosCallback(PFN_CursorPosCallback callback);
 
     GLFWwindow* GetWindowHandle() const { return hwindow; }
 
@@ -60,7 +64,9 @@ private:
     GLFWwindow* hwindow = nullptr;
     std::unordered_map<std::string, void*> userData;
     std::vector<PFN_WindowKeyCallback> keyCallbacks;
+    std::vector<PFN_WindowMouseButtonCallback> mouseButtonCallbacks;
     std::vector<PFN_ScrollKeyCallback> scrollCallbacks;
+    std::vector<PFN_CursorPosCallback> cursorPosCallbacks;
 };
 
 #endif /* WINDOW_H_ */

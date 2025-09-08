@@ -14,6 +14,7 @@
 #include <stb/stb_image.h>
 
 #include "rendering/camera/camera.h"
+#include "event/dispatcher.h"
 #include "editor/editor.h"
 
 struct Vertex {
@@ -41,13 +42,13 @@ struct DragState {
 
 DragState dragState;
 
-void CameraMove(Camera* camera, Window* window)
+void CameraMove(Camera* camera, Dispatcher* dispatcher)
 {
     static float velocity = 0.002f;
 
-    if (window->GetMouseButton(GLFW_MOUSE_BUTTON_3) == GLFW_PRESS) {
-        double x, y;
-        window->GetCursorPos(&x, &y);
+    if (dispatcher->IsMouseButtonHeld(GLFW_MOUSE_BUTTON_3)) {
+        double x = dispatcher->GetMouseX();
+        double y = dispatcher->GetMouseY();
 
         if (!dragState.dragging) {
             dragState.dragging = true;
@@ -65,6 +66,25 @@ void CameraMove(Camera* camera, Window* window)
     } else {
         dragState.dragging = false;
     }
+}
+
+void CameraScroll(Camera* camera, Dispatcher* dispatcher)
+{
+    static float factor   = 0.02f;
+    static float velocity = 0.3f;
+    static float targetZ  = 0.0f;
+
+    glm::vec3& campos = camera->GetPositionRef();
+
+    if (targetZ == 0.0f)
+        targetZ = campos.z;
+
+    double delta = dispatcher->GetScrollY();
+
+    if (delta != 0)
+        targetZ += -(delta * velocity);
+
+    campos.z += (targetZ - campos.z) * factor;
 }
 
 int main()
@@ -89,6 +109,7 @@ int main()
     setbuf(stdout, NULL);
 
     const std::unique_ptr<Window> window = std::make_unique<Window>("Quokka", 1450, 850);
+    const std::unique_ptr<Dispatcher> dispatcher = std::make_unique<Dispatcher>(window.get());
     const std::unique_ptr<RenderDriver> driver = std::make_unique<RenderDriver>();
 
     VkSurfaceKHR surface = VK_NULL_HANDLE;
@@ -114,29 +135,6 @@ int main()
     float aspectRatio = driver->GetSwapchainAspectRatio();
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), aspectRatio);
 
-    window->SetUserContextData("camera", &camera);
-    window->RegisterScrollCallback([](Window* window, double xOffset, double yOffset) {
-       Camera* camera = static_cast<Camera*>(window->GetUserContextData("camera"));
-
-        static float factor   = 0.02f;
-        static float velocity = 0.3f;
-        static float targetZ  = 0.0f;
-
-        glm::vec3& campos = camera->GetPositionRef();
-
-        if (targetZ == 0.0f)
-            targetZ = campos.z;
-
-        double delta = yOffset;
-
-        if (delta != 0)
-            targetZ += -(delta * velocity);
-
-        campos.z += (targetZ - campos.z) * factor;
-    });
-
-    bool showDemoWindow = true;
-
     // 离屏渲染
     VkCommandBuffer v2CommandBuffer;
     driver->CreateCommandBuffer(&v2CommandBuffer);
@@ -161,7 +159,7 @@ int main()
     GameEditor::CreateImTextureID(v2Texture, &textureId);
 
     while (!window->ShouldClose()) {
-        glfwPollEvents();
+        dispatcher->PollEvents();
 
         /* 计算 MVP 矩阵 */
         camera.Update();
@@ -209,7 +207,11 @@ int main()
             if (QkImGuiBeginViewport("视口")) {
                 // 只有当焦点在 viewport 窗口上才触发 Move 操作
                 if (ImGui::IsWindowFocused())
-                    CameraMove(&camera, window.get());
+                    CameraMove(&camera, dispatcher.get());
+
+                // 只有当焦点在 viewport 窗口上才触发 Scroll 操作
+                if (ImGui::IsWindowHovered())
+                    CameraScroll(&camera, dispatcher.get());
 
                 ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
                 if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
