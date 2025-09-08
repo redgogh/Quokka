@@ -81,6 +81,8 @@ void Dispatcher::_ResetStateForFrame()
     scrollY = 0;
 
     /* 清理事件队列 */
-    std::queue<Event> empty;
-    std::swap(queue, empty);
+    if (!queue.empty()) {
+        std::queue<Event> empty;
+        std::swap(queue, empty);
+    }
 }
