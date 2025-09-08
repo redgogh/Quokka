@@ -19,6 +19,13 @@ Dispatcher::Dispatcher(Window *pWindow) : window(pWindow)
         if (action == GLFW_PRESS && !dispatcher->keyHeld[key]) {
             dispatcher->keyDown[key] = true;
             dispatcher->keyHeld[key] = true;
+
+            /* 检测是否双击 */
+            double nowTime = glfwGetTime();
+            double deltaTime = nowTime - dispatcher->keyClickInfo[key].clickTime;
+            dispatcher->keyClickInfo[key].clickTime = nowTime;
+            if (deltaTime <= 0.25f)
+                dispatcher->keyDoubleClick[key] = true;
         }
 
         if (action == GLFW_RELEASE) {
@@ -37,6 +44,21 @@ Dispatcher::Dispatcher(Window *pWindow) : window(pWindow)
         if (action == GLFW_PRESS && !dispatcher->mouseButtonHeld[button]) {
             dispatcher->mouseButtonDown[button] = true;
             dispatcher->mouseButtonHeld[button] = true;
+
+            /* 检测是否双击 */
+            MouseButtonClickInfo& clickInfo = dispatcher->mouseButtonClickInfo[button];
+            double nowTime = glfwGetTime();
+            double deltaTime = nowTime - clickInfo.clickTime;
+
+            double x = dispatcher->GetMouseX();
+            double y = dispatcher->GetMouseY();
+
+            double deltaOffset = x - (clickInfo.x) + (y - clickInfo.y);
+
+            clickInfo = { nowTime, x, y };
+
+            if (deltaOffset <= 0.5f && deltaTime <= 0.25f)
+                dispatcher->mouseButtonDoubleClick[button] = true;
         }
 
         if (action == GLFW_RELEASE) {
@@ -77,9 +99,11 @@ void Dispatcher::_ResetStateForFrame()
 {
     memset(keyDown, 0, sizeof(keyDown));
     memset(keyUp, 0, sizeof(keyUp));
+    memset(keyDoubleClick, 0, sizeof(keyDoubleClick));
 
     memset(mouseButtonDown, 0, sizeof(mouseButtonDown));
     memset(mouseButtonUp, 0, sizeof(mouseButtonUp));
+    memset(mouseButtonDoubleClick, 0, sizeof(mouseButtonDoubleClick));
 
     scrollX = 0;
     scrollY = 0;
