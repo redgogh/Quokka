@@ -1450,7 +1450,7 @@ VkResult RenderDriver::_PerInitSamplers()
 void RenderDriver::_DestroyPerInitSamplers()
 {
     DestroySampler(linearRepeatSampler);
-    DestroySampler(linearRepeatSampler);
+    DestroySampler(nearestClampSampler);
 }
 
 VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
