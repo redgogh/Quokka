@@ -23,14 +23,17 @@ public:
     Window(const char* title, uint32_t w, uint32_t h);
    ~Window();
 
+    /* Window 类通用方法 */
     bool GetKey(int key) const;
     bool GetMouseButton(int button) const;
     bool ShouldClose() const;
     void GetCursorPos(double *x, double *y) const;
 
+    /* 设置用户窗口上下文数据用于回调中使用 */
     void SetUserContextData(const std::string& name, void* data);
     void* GetUserContextData(const std::string& name);
 
+    /* 注册各个事件回调函数 */
     void RegisterKeyCallback(PFN_WindowKeyCallback callback);
     void RegisterScrollCallback(PFN_ScrollKeyCallback callback);
 

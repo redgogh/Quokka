@@ -12,10 +12,9 @@
 #include <iostream>
 
 #include <stb/stb_image.h>
-#include <qk_imgui/qk_imgui.h>
 
-#include "imgui/imgui_internal.h"
 #include "rendering/camera/camera.h"
+#include "editor/editor.h"
 
 struct Vertex {
     glm::vec2 pos;
@@ -33,31 +32,6 @@ uint32_t indices[] = {
     0, 1, 2, // 第一个三角形
     2, 3, 0  // 第二个三角形
 };
-
-void InitQkImGui(const std::unique_ptr<RenderDriver>& driver, const std::unique_ptr<Window>& window)
-{
-    VkFormat colorAttachmentFormats[] = {
-        driver->GetSwapchainFormat()
-    };
-
-    ImGui_ImplVulkan_InitInfo ImGuiVulkanInitInfo = {};
-    ImGuiVulkanInitInfo.Instance = driver->GetInstance();
-    ImGuiVulkanInitInfo.PhysicalDevice = driver->GetPhysicalDevice();
-    ImGuiVulkanInitInfo.Device = driver->GetDevice();
-    ImGuiVulkanInitInfo.QueueFamily = driver->GetQueueFamilyIndex();
-    ImGuiVulkanInitInfo.Queue = driver->GetGraphicsQueue();
-    ImGuiVulkanInitInfo.PipelineCache = VK_NULL_HANDLE;
-    ImGuiVulkanInitInfo.DescriptorPool = driver->GetDescriptorPool();
-    ImGuiVulkanInitInfo.UseDynamicRendering = VK_TRUE;
-    ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-    ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
-    ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
-    ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
-    ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-
-    QkImGuiVulkanHInit(window->GetWindowHandle(), &ImGuiVulkanInitInfo);
-}
 
 struct DragState {
     bool dragging = false;
@@ -122,7 +96,7 @@ int main()
     assert(!err);
     driver->Initialize(surface);
 
-    InitQkImGui(driver, window);
+    GameEditor::Initialize(driver.get(), window.get());
 
     Pipeline pipeline;
     driver->CreatePipeline("qk_simple_shader", &pipeline);
@@ -183,7 +157,8 @@ int main()
     driver->LoadTextureFromFile("../misc/quokka_1.png", &quokkaLogo);
     driver->BindTexture(pipeline, "tex", quokkaLogo, sampler);
 
-    ImTextureID imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    ImTextureID textureId;
+    GameEditor::CreateImTextureID(v2Texture, &textureId);
 
     while (!window->ShouldClose()) {
         glfwPollEvents();
@@ -196,10 +171,10 @@ int main()
             watchWSize = watchVWSize;
             camera.SetAspectRatio(watchWSize.x / watchWSize.y);
             driver->DeviceWaitIdle();
-            QkImGuiRemoveTexture(imTextureId);
+            GameEditor::DestroyImTextureID(textureId);
             driver->DestroyTexture(v2Texture);
             driver->CreateTexture(watchWSize.x, watchWSize.y, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
-            imTextureId = QkImGuiAddTexture(sampler, dGetVkImageView(v2Texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            GameEditor::CreateImTextureID(v2Texture, &textureId);
         }
 
         // update uniform buffer
@@ -229,8 +204,8 @@ int main()
         driver->CmdBeginRendering(cmd, swapchainImage);
 
         {
-            QkImGuiVulkanHNewFrame(cmd);
-            ImGui::ShowDemoWindow(&showDemoWindow);
+            GameEditor::BeginNewFrame(cmd);
+            GameEditor::ShowDemoWindow();
             if (QkImGuiBeginViewport("视口")) {
                 // 只有当焦点在 viewport 窗口上才触发 Move 操作
                 if (ImGui::IsWindowFocused())
@@ -239,7 +214,7 @@ int main()
                 ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
                 if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
                     watchVWSize = currentVWSize;
-                ImGui::Image(imTextureId, currentVWSize);
+                GameEditor::DrawImage(textureId, currentVWSize);
                 QkImGuiEndViewport();
             }
 
@@ -248,7 +223,7 @@ int main()
                 QkImGuiDragFloat3("方向", camera.GetDirectionPtr(), 0.01f);
                 QkImGuiEnd();
             }
-            QkImGuiVulkanHEndFrame(cmd);
+            GameEditor::EndNewFrame(cmd);
         }
 
         driver->CmdEndRendering(cmd);
@@ -259,7 +234,7 @@ int main()
 
     driver->DeviceWaitIdle();
 
-    QkImGuiVulkanHTerminate();
+    GameEditor::Terminate();
 
     driver->DestroyTexture(quokkaLogo);
     driver->DestroyFence(drawFence);

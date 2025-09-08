@@ -19,6 +19,7 @@ FILE(GLOB_RECURSE SOURCES
   "driver/*.cpp"
   "platform/*.cpp"
   "rendering/*.cpp"
+  "editor/*.cpp"
   "main.cpp"
 )
 
