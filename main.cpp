@@ -16,6 +16,7 @@
 #include "rendering/camera/camera.h"
 #include "platform/event/dispatcher.h"
 #include "ui/editor/editor.h"
+#include <quokka/qk_format.h>
 
 struct Vertex {
     glm::vec2 pos;
@@ -155,6 +156,7 @@ int main()
         {
             editor->BeginNewFrame(cmd);
             editor->ShowDemoWindow();
+
             if (QkImGuiBeginViewport("视口")) {
                 // 只有当焦点在 viewport 窗口上才触发 Move 操作
                 if (ImGui::IsWindowFocused()) {
@@ -172,6 +174,15 @@ int main()
                 if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
                     watchVWSize = currentVWSize;
                 ImGui::Image(textureId, currentVWSize);
+
+                // fps
+                ImVec2 wpos = ImGui::GetWindowPos();
+                ImVec2 wsize = ImGui::GetWindowSize();
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+                const char* fpsText = qk_format("FPS: %.1f", 100).c_str();
+                ImVec2 textSize = ImGui::CalcTextSize(fpsText);
+                drawList->AddText(ImVec2(wpos.x + wsize.x - textSize.x - 25, wpos.y + textSize.y + 20), IM_COL32(0, 255, 0, 255), fpsText);
+
                 QkImGuiEndViewport();
             }
 
