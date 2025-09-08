@@ -119,7 +119,7 @@ int main()
     assert(!err);
     driver->Initialize(surface);
 
-    GameEditor::Initialize(driver.get(), window.get());
+    std::unique_ptr<GameEditor> editor = std::make_unique<GameEditor>(driver.get(), window.get());
 
     Pipeline pipeline;
     driver->CreatePipeline("qk_simple_shader", &pipeline);
@@ -157,8 +157,7 @@ int main()
     driver->LoadTextureFromFile("../misc/quokka_1.png", &quokkaLogo);
     driver->BindTexture(pipeline, "tex", quokkaLogo, sampler);
 
-    ImTextureID textureId;
-    GameEditor::CreateImTextureID(v2Texture, &textureId);
+    ImTextureID textureId = editor->CreateTextureId(v2Texture);
 
     while (!window->ShouldClose()) {
         dispatcher->PollEvents();
@@ -171,10 +170,10 @@ int main()
             watchWSize = watchVWSize;
             camera.SetAspectRatio(watchWSize.x / watchWSize.y);
             driver->DeviceWaitIdle();
-            GameEditor::DestroyImTextureID(textureId);
+            editor->DestroyTextureId(textureId);
             driver->DestroyTexture(v2Texture);
             driver->CreateTexture(watchWSize.x, watchWSize.y, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, &v2Texture);
-            GameEditor::CreateImTextureID(v2Texture, &textureId);
+            textureId = editor->CreateTextureId(v2Texture);
         }
 
         // update uniform buffer
@@ -204,8 +203,8 @@ int main()
         driver->CmdBeginRendering(cmd, swapchainImage);
 
         {
-            GameEditor::BeginNewFrame(cmd);
-            GameEditor::ShowDemoWindow();
+            editor->BeginNewFrame(cmd);
+            editor->ShowDemoWindow();
             if (QkImGuiBeginViewport("视口")) {
                 // 只有当焦点在 viewport 窗口上才触发 Move 操作
                 if (ImGui::IsWindowFocused())
@@ -218,7 +217,7 @@ int main()
                 ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
                 if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
                     watchVWSize = currentVWSize;
-                GameEditor::DrawImage(textureId, currentVWSize);
+                ImGui::Image(textureId, currentVWSize);
                 QkImGuiEndViewport();
             }
 
@@ -227,7 +226,7 @@ int main()
                 QkImGuiDragFloat3("方向", camera.GetDirectionPtr(), 0.01f);
                 QkImGuiEnd();
             }
-            GameEditor::EndNewFrame(cmd);
+            editor->EndFrame(cmd);
         }
 
         driver->CmdEndRendering(cmd);
@@ -237,8 +236,6 @@ int main()
     }
 
     driver->DeviceWaitIdle();
-
-    GameEditor::Terminate();
 
     driver->DestroyTexture(quokkaLogo);
     driver->DestroyFence(drawFence);
