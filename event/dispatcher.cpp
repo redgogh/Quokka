@@ -12,12 +12,13 @@ Dispatcher::Dispatcher(Window *pWindow) : window(pWindow)
     // 注册键盘事件
     window->RegisterKeyCallback([](Window* uc_window, int key, int scancode, int action, int mods) {
         Dispatcher* dispatcher = static_cast<Dispatcher*>(uc_window->GetUserContextData(UC_KEY));
+
         EventType TP = action == GLFW_PRESS ? EVENT_TYPE_KEY_DOWN : EVENT_TYPE_KEY_UP;
+        dispatcher->queue.push({ TP, key, mods, 0, 0 });
 
         if (action == GLFW_PRESS && !dispatcher->keyHeld[key]) {
             dispatcher->keyDown[key] = true;
             dispatcher->keyHeld[key] = true;
-            dispatcher->queue.push({ TP, key, mods, 0, 0 });
         }
 
         if (action == GLFW_RELEASE) {
@@ -31,11 +32,11 @@ Dispatcher::Dispatcher(Window *pWindow) : window(pWindow)
         Dispatcher* dispatcher = static_cast<Dispatcher*>(uc_window->GetUserContextData(UC_KEY));
 
         EventType TP = action == GLFW_PRESS ? EVENT_TYPE_MOUSE_BUTTON_DOWN : EVENT_TYPE_MOUSE_BUTTON_UP;
+        dispatcher->queue.push({ TP, button, mods, 0, 0 });
 
         if (action == GLFW_PRESS && !dispatcher->mouseButtonHeld[button]) {
             dispatcher->mouseButtonDown[button] = true;
             dispatcher->mouseButtonHeld[button] = true;
-            dispatcher->queue.push({ TP, button, mods, 0, 0 });
         }
 
         if (action == GLFW_RELEASE) {
@@ -76,6 +77,9 @@ void Dispatcher::_ResetStateForFrame()
 {
     memset(keyDown, 0, sizeof(keyDown));
     memset(keyUp, 0, sizeof(keyUp));
+
+    memset(mouseButtonDown, 0, sizeof(mouseButtonDown));
+    memset(mouseButtonUp, 0, sizeof(mouseButtonUp));
 
     scrollX = 0;
     scrollY = 0;
