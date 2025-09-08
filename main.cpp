@@ -42,53 +42,6 @@ struct DragState {
 
 DragState dragState;
 
-void CameraMove(Camera* camera, Dispatcher* dispatcher)
-{
-    static float velocity = 0.002f;
-
-    if (dispatcher->IsKeyHeld(GLFW_KEY_LEFT_ALT) && dispatcher->IsMouseButtonHeld(GLFW_MOUSE_BUTTON_3)) {
-        double x = dispatcher->GetMouseX();
-        double y = dispatcher->GetMouseY();
-
-        if (!dragState.dragging) {
-            dragState.dragging = true;
-            dragState.startX = x;
-            dragState.startY = y;
-            dragState.startCameraPos = camera->GetPosition();
-        } else {
-            float distance = std::max(0.1f, camera->GetPositionRef().z);
-            float sensitivity = 0.5f * distance;
-            float dx = static_cast<float>(x - dragState.startX) * velocity * sensitivity;
-            float dy = static_cast<float>(y - dragState.startY) * velocity * sensitivity;
-            camera->SetPosition(dragState.startCameraPos + glm::vec3(-dx, -dy, 0.0f));
-        }
-
-    } else {
-        dragState.dragging = false;
-    }
-}
-
-void CameraScroll(Camera* camera, Dispatcher* dispatcher)
-{
-    static float factor   = 0.02f;
-    static float velocity = 0.3f;
-    static float targetZ  = 0.0f;
-
-    if (dispatcher->IsKeyHeld(GLFW_KEY_LEFT_ALT)) {
-        glm::vec3 &campos = camera->GetPositionRef();
-
-        if (targetZ == 0.0f)
-            targetZ = campos.z;
-
-        double delta = dispatcher->GetScrollY();
-
-        if (delta != 0)
-            targetZ += -(delta * velocity);
-
-        campos.z += (targetZ - campos.z) * factor;
-    }
-}
-
 int main()
 {
 #ifdef WIN32
@@ -135,7 +88,7 @@ int main()
     driver->BindUniformBuffer(pipeline, "camera", 0, sizeof(glm::mat4), uniformBuffer);
 
     float aspectRatio = driver->GetSwapchainAspectRatio();
-    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), aspectRatio);
+    Camera camera(0.0f, 0.0f, 3.0f);
 
     // 离屏渲染
     VkCommandBuffer v2CommandBuffer;
@@ -204,12 +157,16 @@ int main()
             editor->ShowDemoWindow();
             if (QkImGuiBeginViewport("视口")) {
                 // 只有当焦点在 viewport 窗口上才触发 Move 操作
-                if (ImGui::IsWindowFocused())
-                    CameraMove(&camera, dispatcher.get());
-
-                // 只有当焦点在 viewport 窗口上才触发 Scroll 操作
-                if (ImGui::IsWindowHovered())
-                    CameraScroll(&camera, dispatcher.get());
+                if (ImGui::IsWindowFocused()) {
+                    if (dispatcher->IsKeyHeld(GLFW_KEY_W))
+                        camera.Move(1, 0, 0);
+                    if (dispatcher->IsKeyHeld(GLFW_KEY_S))
+                        camera.Move(-1, 0, 0);
+                    if (dispatcher->IsKeyHeld(GLFW_KEY_A))
+                        camera.Move(0, -1, 0);
+                    if (dispatcher->IsKeyHeld(GLFW_KEY_D))
+                        camera.Move(0, 1, 0);
+                }
 
                 ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
                 if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
@@ -218,9 +175,9 @@ int main()
                 QkImGuiEndViewport();
             }
 
-            if (QkImGuiBegin("调试")) {
-                QkImGuiDragFloat3("位置", camera.GetPositionPtr(), 0.01f);
-                QkImGuiDragFloat3("方向", camera.GetDirectionPtr(), 0.01f);
+            if (QkImGuiBegin("属性面板")) {
+                glm::vec3& position = camera.GetPosition();
+                QkImGuiDragFloat3("位置", glm::value_ptr(position), 0.01f);
                 QkImGuiEnd();
             }
             editor->EndFrame(cmd);

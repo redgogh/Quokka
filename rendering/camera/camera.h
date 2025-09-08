@@ -5,50 +5,45 @@
 
 class Camera {
 public:
-    Camera(const glm::vec3& position, float aspectRatio);
-   ~Camera();
+    Camera(float x, float y, float z);
+    Camera(float x, float y, float z, float zNear, float zFar);
+    Camera(float x, float y, float z, float fov, float zNear, float zFar);
+   ~Camera() = default;
 
     void Update();
 
-    void SetPosition(const glm::vec3& pos);
-    void SetDirection(const glm::vec3& dir);
+    void Move(float x, float y, float z);
 
-    void SetFov(float fov);
-    void SetAspectRatio(float aspectRatio);
-    void SetNear(float near);
-    void SetFar(float far);
+    void SetFov(float v_fov) { fov = v_fov; }
+    void SetAspectRatio(float v_aspect) { aspect = v_aspect; }
+    void SetZNear(float v_zNear) { zNear = v_zNear; }
+    void SetZFar(float v_zFar) { zFar = v_zFar; }
 
-    glm::vec3 GetPosition() { return position; }
-    glm::vec3& GetPositionRef();
-    float* GetPositionPtr();
-    glm::vec3& GetDirectionRef();
-    float* GetDirectionPtr();
-    const glm::mat4& GetViewMatrix() const;
-    const glm::mat4& GetProjectionMatrix() const;
+   glm::vec3& GetPosition() { return position; }
+   float GetFov() const { return fov; }
+   float GetAspectRatio() const { return aspect; }
+   float GetZNear() const { return zNear; }
+   float GetZFar() const { return zFar; }
+
+   const glm::mat4& GetViewMatrix() const { return viewMatrix; }
+   const glm::mat4& GetProjectionMatrix() const { return projectionMatrix; }
 
 private:
-    void MarkViewDirty() { viewDirty = true; }
-    void MarkProjectionDirty() { projectionDirty = true; }
+    /* parameters */
+    glm::vec3 position = { 0.0f, 0.0f, -3.0f };
+    glm::vec3 forward = { 0.0f, 0.0f, -1.0f };
+    glm::vec3 up = { 0.0f, 1.0f, 0.0f };
 
-    void UnmarkViewDirty() { viewDirty = false; }
-    void UnmarkProjectionDirty() { projectionDirty = false; }
+    float fov = 60.0f;
+    float aspect = 1.6f;
+    float zNear = 0.1f;
+    float zFar = 1000.0f;
 
-    bool viewDirty = false;
-    bool projectionDirty = false;
+    /* matrix */
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
+    glm::mat4 projectionMatrix = glm::mat4(1.0f);
 
-    /* 相机核心参数 */
-    glm::vec3 position        = { 0.0f, 0.0f,  3.0f };
-    glm::vec3 direction       = { 0.0f, 0.0f, -1.0f };
-    glm::vec3 up              = { 0.0f, 1.0f,  0.0f };
-
-    float fov                 = 45.0f;
-    float aspectRatio         = 16.0f / 9.0f;
-    float near                = 0.01f;
-    float far                 = 1000.0f;
-
-    glm::mat4 projection      = glm::mat4(1.0f);
-    glm::mat4 view            = glm::mat4(1.0f);
-
+    float velocity = 0.05f;
 };
 
 #endif /* CAMERA_H_ */

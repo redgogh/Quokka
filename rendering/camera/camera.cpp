@@ -1,101 +1,37 @@
 #include "camera.h"
 
-Camera::Camera(const glm::vec3& position, float aspectRatio)
+Camera::Camera(float x, float y, float z)
 {
-    SetPosition(position);
-    SetAspectRatio(aspectRatio);
-    MarkViewDirty();
-    MarkProjectionDirty();
-    Update();
+    this->position = { x, y, z };
 }
 
-Camera::~Camera()
+Camera::Camera(float x, float y, float z, float zNear, float zFar)
 {
-    /* do nothing... */
+    this->position = { x, y, z };
+    this->zNear = zNear;
+    this->zFar = zFar;
+}
+
+Camera::Camera(float x, float y, float z, float fov, float zNear, float zFar)
+{
+    this->position = { x, y, z };
+    this->fov = fov;
+    this->zNear = zNear;
+    this->zFar = zFar;
 }
 
 void Camera::Update()
 {
-    if (viewDirty) {
-        const glm::vec3 dir = glm::normalize(direction);
-        const glm::vec3 target = position + dir;
-        view = glm::lookAt(position, target, up);
-        UnmarkViewDirty();
-    }
-
-    if (projectionDirty) {
-        projection = glm::perspectiveRH_ZO(glm::radians(fov), aspectRatio, near, far);
-        UnmarkProjectionDirty();
-    }
+    viewMatrix = glm::lookAt(position, position + forward, up);
+    projectionMatrix = glm::perspectiveRH_ZO(glm::radians(fov), aspect, zNear, zFar);
 }
 
-void Camera::SetPosition(const glm::vec3 &pos)
+void Camera::Move(float x, float y, float z)
 {
-    this->position = pos;
-    MarkViewDirty();
-}
+    glm::vec3 right = glm::normalize(glm::cross(forward, up));
+    glm::vec3 worldUp = glm::normalize(glm::cross(right, forward));
 
-void Camera::SetDirection(const glm::vec3 &dir)
-{
-    this->direction = dir;
-    MarkViewDirty();
-}
-
-void Camera::SetFov(float fov)
-{
-    this->fov = fov;
-    MarkProjectionDirty();
-}
-
-void Camera::SetAspectRatio(float aspectRatio)
-{
-    this->aspectRatio = aspectRatio;
-    MarkProjectionDirty();
-}
-
-void Camera::SetFar(float far)
-{
-    this->far = far;
-    MarkProjectionDirty();
-}
-
-void Camera::SetNear(float near)
-{
-    this->near = near;
-    MarkProjectionDirty();
-}
-
-glm::vec3 &Camera::GetPositionRef()
-{
-    MarkViewDirty();
-    return position;
-}
-
-float *Camera::GetPositionPtr()
-{
-    MarkViewDirty();
-    return glm::value_ptr(position);
-}
-
-
-glm::vec3 &Camera::GetDirectionRef()
-{
-    MarkViewDirty();
-    return direction;
-}
-
-float *Camera::GetDirectionPtr()
-{
-    MarkViewDirty();
-    return glm::value_ptr(direction);
-}
-
-const glm::mat4& Camera::GetProjectionMatrix() const
-{
-    return projection;
-}
-
-const glm::mat4& Camera::GetViewMatrix() const
-{
-    return view;
+    position += forward * x * velocity;
+    position += right * y * velocity;
+    position += worldUp * z * velocity;
 }
