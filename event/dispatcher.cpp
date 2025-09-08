@@ -50,7 +50,6 @@ Dispatcher::Dispatcher(Window *pWindow) : window(pWindow)
         dispatcher->queue.push({ EVENT_TYPE_SCROLL, 0, 0, x, y });
         dispatcher->scrollX = x;
         dispatcher->scrollY = y;
-        printf("y = %.2f\n", dispatcher->scrollY);
     });
 
     // 鼠标移动事件
