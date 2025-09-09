@@ -14,6 +14,7 @@ ADD_SUBDIRECTORY("modules/volk")
 ADD_SUBDIRECTORY("modules/stb")
 ADD_SUBDIRECTORY("modules/imgui")
 ADD_SUBDIRECTORY("modules/spirv")
+ADD_SUBDIRECTORY("thirdparty/tinygltf")
 
 FILE(GLOB_RECURSE SOURCES
   "driver/*.cpp"
@@ -40,6 +41,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE
   "glfw3"
   "imgui"
   "spirv"
+  "tinygltf"
 )
 
 IF (APPLE)

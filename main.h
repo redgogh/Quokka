@@ -20,6 +20,7 @@
 #include "platform/event/dispatcher.h"
 #include "ui/editor/editor.h"
 #include <quokka/qk_format.h>
+#include <tiny_gltf.h>
 
 struct Vertex {
     glm::vec2 pos;
