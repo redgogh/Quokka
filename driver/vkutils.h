@@ -110,6 +110,12 @@ namespace VkUtils
         SPIRV_InterfaceVariables vertexInputVariables;
         SPIRV_EnumerateInputVariables(&shaderModule, &vertexInputVariables);
 
+        /* 根据 location 排序，从小到大 */
+        std::sort(vertexInputVariables.begin(), vertexInputVariables.end(),
+                  [](const SpvReflectInterfaceVariable* a, const SpvReflectInterfaceVariable* b) {
+            return a->location < b->location;
+        });
+
         uint32_t stride = 0;
 
         for (const auto& vertexInputVariable : vertexInputVariables) {

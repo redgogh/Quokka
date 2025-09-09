@@ -15,6 +15,6 @@ layout(set = 0, binding = 0) uniform Camera {
 
 void main()
 {
-    gl_Position = camera.mvp * vec4(pos, 1.0f);
+    gl_Position = camera.mvp * vec4(pos, 1.0);
     outUV = uv;
 }
