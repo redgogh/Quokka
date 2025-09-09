@@ -19,7 +19,7 @@ ADD_SUBDIRECTORY("thirdparty/tinygltf")
 FILE(GLOB_RECURSE SOURCES
   "driver/*.cpp"
   "platform/*.cpp"
-  "rendering/*.cpp"
+  "engine/*.cpp"
   "ui/*.cpp"
   "event/*.cpp"
   "main.cpp"

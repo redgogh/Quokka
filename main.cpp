@@ -23,7 +23,7 @@ int main()
     tinygltf::Model model;
     std::string tinyGlTFErr;
     std::string tinyGLTFWarn;
-    loader.LoadBinaryFromFile(&model, &tinyGLTFWarn, &tinyGlTFErr, "../main.h");
+    loader.LoadBinaryFromFile(&model, &tinyGLTFWarn, &tinyGlTFErr, "../misc/cube.glb");
 
     if (!tinyGlTFErr.empty())
         throw std::runtime_error(tinyGlTFErr);

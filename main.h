@@ -16,22 +16,18 @@
 
 #include <stb/stb_image.h>
 
-#include "rendering/camera/camera.h"
+#include "engine/camera/camera.h"
 #include "platform/event/dispatcher.h"
 #include "ui/editor/editor.h"
 #include <quokka/qk_format.h>
 #include <tiny_gltf.h>
-
-struct Vertex {
-    glm::vec2 pos;
-    glm::vec2 uv;
-};
+#include "engine/objects/render_object.h"
 
 Vertex vertices[] = {
-    {{ -0.5f, -0.5f }, { 0.0f, 0.0f }}, // 左下
-    {{  0.5f, -0.5f }, { 1.0f, 0.0f }}, // 右下
-    {{  0.5f,  0.5f }, { 1.0f, 1.0f }}, // 右上
-    {{ -0.5f,  0.5f }, { 0.0f, 1.0f }}  // 左上
+    {{ -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }}, // 左下
+    {{  0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f }}, // 右下
+    {{  0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }}, // 右上
+    {{ -0.5f,  0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f }}  // 左上
 };
 
 uint32_t indices[] = {
