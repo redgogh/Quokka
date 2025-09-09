@@ -1,7 +1,7 @@
 #ifndef EDITOR_H_
 #define EDITOR_H_
 
-#include "driver/render_driver.h"
+#include "driver/render_device.h"
 #include "platform/glfw3/window.h"
 #include <qk_imgui/qk_imgui.h>
 
@@ -18,7 +18,7 @@ struct EditorWindow {
 class GameEditor
 {
 public:
-    GameEditor(RenderDriver* driver, Window* window);
+    GameEditor(RenderDevice* pDevice, Window* window);
    ~GameEditor();
 
     void BeginNewFrame(VkCommandBuffer commandBuffer);
@@ -37,7 +37,7 @@ public:
     static void DrawFPS(uint32_t fps);
 
 private:
-    RenderDriver* driver = VK_NULL_HANDLE;
+    RenderDevice* device = VK_NULL_HANDLE;
     Window* hwnd = VK_NULL_HANDLE;
     std::unordered_map<std::string, EditorWindow> viewports;
     std::unordered_map<std::string, EditorWindow> windows;

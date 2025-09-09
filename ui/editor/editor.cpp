@@ -2,27 +2,27 @@
 
 #include <quokka/qk_format.h>
 
-GameEditor::GameEditor(RenderDriver* pDriver, Window* pWindow)
-    : driver(pDriver), hwnd(pWindow)
+GameEditor::GameEditor(RenderDevice* pDevice, Window* pWindow)
+    : device(pDevice), hwnd(pWindow)
 {
     const VkFormat colorAttachmentFormats[] = {
-        driver->GetSwapchainFormat()
+        device->GetSwapchainFormat()
     };
 
     ImGui_ImplVulkan_InitInfo ImGuiVulkanInitInfo = {};
-    ImGuiVulkanInitInfo.Instance = driver->GetInstance();
-    ImGuiVulkanInitInfo.PhysicalDevice = driver->GetPhysicalDevice();
-    ImGuiVulkanInitInfo.Device = driver->GetDevice();
-    ImGuiVulkanInitInfo.QueueFamily = driver->GetQueueFamilyIndex();
-    ImGuiVulkanInitInfo.Queue = driver->GetGraphicsQueue();
+    ImGuiVulkanInitInfo.Instance = device->GetInstance();
+    ImGuiVulkanInitInfo.PhysicalDevice = device->GetPhysicalDevice();
+    ImGuiVulkanInitInfo.Device = device->GetDevice();
+    ImGuiVulkanInitInfo.QueueFamily = device->GetQueueFamilyIndex();
+    ImGuiVulkanInitInfo.Queue = device->GetGraphicsQueue();
     ImGuiVulkanInitInfo.PipelineCache = VK_NULL_HANDLE;
-    ImGuiVulkanInitInfo.DescriptorPool = driver->GetDescriptorPool();
+    ImGuiVulkanInitInfo.DescriptorPool = device->GetDescriptorPool();
     ImGuiVulkanInitInfo.UseDynamicRendering = VK_TRUE;
     ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
     ImGuiVulkanInitInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
-    ImGuiVulkanInitInfo.MinImageCount = driver->GetMinImageCount();
-    ImGuiVulkanInitInfo.ImageCount = driver->GetMinImageCount();
+    ImGuiVulkanInitInfo.MinImageCount = device->GetMinImageCount();
+    ImGuiVulkanInitInfo.ImageCount = device->GetMinImageCount();
     ImGuiVulkanInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
     QkImGuiVulkanHInit(hwnd->GetWindowHandle(), &ImGuiVulkanInitInfo);
@@ -71,7 +71,7 @@ void GameEditor::RegisterViewport(const std::string &name, std::function<void()>
 
 ImTextureID GameEditor::CreateTextureId(Texture texture)
 {
-    return QkImGuiAddTexture(driver->GetLinearRepeatSampler(), dGetVkImageView(texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    return QkImGuiAddTexture(device->GetLinearRepeatSampler(), dGetVkImageView(texture), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void GameEditor::DestroyTextureId(ImTextureID textureId)

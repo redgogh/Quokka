@@ -21,17 +21,17 @@ typedef struct QVkPipeline *Pipeline;
 /* 定义 SwapchainImage 对象，因为 Texture 不太适合描述交换链图像 */
 typedef Texture SwapchainImage;
 
-/* dGetVkImage 函数用于在不依赖 RenderDriver 的情况下获取 Vulkan 原生 VkImage 对象 */
+/* dGetVkImage 函数用于在不依赖 RenderDevice 的情况下获取 Vulkan 原生 VkImage 对象 */
 VkImage dGetVkImage(Texture texture);
 
-/* dGetVkImageView 函数用于在不依赖 RenderDriver 的情况下获取 Vulkan 原生 VkImageView 对象 */
+/* dGetVkImageView 函数用于在不依赖 RenderDevice 的情况下获取 Vulkan 原生 VkImageView 对象 */
 VkImageView dGetVkImageView(Texture texture);
 
-class RenderDriver
+class RenderDevice
 {
 public:
-    RenderDriver();
-   ~RenderDriver();
+    RenderDevice();
+   ~RenderDevice();
 
     VkResult Initialize(VkSurfaceKHR surface);
 

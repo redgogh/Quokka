@@ -1,7 +1,7 @@
 #define VK_NO_PROTOTYPES
 #define VMA_IMPLEMENTATION
 
-#include "render_driver.h"
+#include "render_device.h"
 
 #include <stdio.h>
 #include "vkutils.h"
@@ -63,7 +63,7 @@ VkImageView dGetVkImageView(Texture texture)
     return texture->vkImageView;
 }
 
-RenderDriver::RenderDriver()
+RenderDevice::RenderDevice()
 {
     VkResult err;
 
@@ -95,7 +95,7 @@ RenderDriver::RenderDriver()
     }
 }
 
-RenderDriver::~RenderDriver()
+RenderDevice::~RenderDevice()
 {
     vkDeviceWaitIdle(device);
 
@@ -113,7 +113,7 @@ RenderDriver::~RenderDriver()
     vkDestroyInstance(instance, VK_NULL_HANDLE);
 }
 
-VkResult RenderDriver::Initialize(VkSurfaceKHR surface)
+VkResult RenderDevice::Initialize(VkSurfaceKHR surface)
 {
     VkResult err;
 
@@ -143,7 +143,7 @@ VkResult RenderDriver::Initialize(VkSurfaceKHR surface)
     err = _PerInitSamplers();
     VK_CHECK_ERROR(err);
 
-    printf("[vulkan] render driver for vulkan initialized\n");
+    printf("[vulkan] render device for vulkan initialized\n");
     printf("[vulkan]   - VkInstance: %p\n", instance);
     printf("[vulkan]   - VkPhysicalDevice: %p\n", physicalDevice);
     printf("[vulkan]   - VkSurface: %p\n", surface);
@@ -155,7 +155,7 @@ VkResult RenderDriver::Initialize(VkSurfaceKHR surface)
     return err;
 }
 
-VkResult RenderDriver::CreateBuffer(const size_t size, VkBufferUsageFlags usage, Buffer *pBuffer)
+VkResult RenderDevice::CreateBuffer(const size_t size, VkBufferUsageFlags usage, Buffer *pBuffer)
 {
     VkResult err;
 
@@ -185,7 +185,7 @@ VkResult RenderDriver::CreateBuffer(const size_t size, VkBufferUsageFlags usage,
     return err;
 }
 
-VkResult RenderDriver::CreateVertexBuffer(size_t size, const void *data, Buffer *pVertexBuffer)
+VkResult RenderDevice::CreateVertexBuffer(size_t size, const void *data, Buffer *pVertexBuffer)
 {
     VkResult err;
 
@@ -198,7 +198,7 @@ VkResult RenderDriver::CreateVertexBuffer(size_t size, const void *data, Buffer 
     return err;
 }
 
-VkResult RenderDriver::CreateIndexBuffer(size_t size, const void *data, Buffer *pIndexBuffer)
+VkResult RenderDevice::CreateIndexBuffer(size_t size, const void *data, Buffer *pIndexBuffer)
 {
     VkResult err;
 
@@ -211,13 +211,13 @@ VkResult RenderDriver::CreateIndexBuffer(size_t size, const void *data, Buffer *
     return err;
 }
 
-void RenderDriver::DestroyBuffer(Buffer buffer)
+void RenderDevice::DestroyBuffer(Buffer buffer)
 {
     vmaDestroyBuffer(allocator, buffer->vkBuffer, buffer->allocation);
     delete buffer;
 }
 
-VkResult RenderDriver::CreateTexture(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture *pTexture)
+VkResult RenderDevice::CreateTexture(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture *pTexture)
 {
     VkResult err;
 
@@ -273,14 +273,14 @@ VkResult RenderDriver::CreateTexture(uint32_t w, uint32_t h, VkFormat format, Vk
     return err;
 }
 
-void RenderDriver::DestroyTexture(Texture texture2D)
+void RenderDevice::DestroyTexture(Texture texture2D)
 {
     vmaDestroyImage(allocator, texture2D->vkImage, texture2D->allocation);
     vkDestroyImageView(device, texture2D->vkImageView, VK_NULL_HANDLE);
     delete texture2D;
 }
 
-VkResult RenderDriver::CreateSampler(VkFilter filter, VkSamplerAddressMode addressMode, bool enableAnisotropy, float maxAnisotropy, bool useMipmaps, VkSampler* pSampler)
+VkResult RenderDevice::CreateSampler(VkFilter filter, VkSamplerAddressMode addressMode, bool enableAnisotropy, float maxAnisotropy, bool useMipmaps, VkSampler* pSampler)
 {
     VkResult err;
 
@@ -308,12 +308,12 @@ VkResult RenderDriver::CreateSampler(VkFilter filter, VkSamplerAddressMode addre
     return err;
 }
 
-void RenderDriver::DestroySampler(VkSampler sampler)
+void RenderDevice::DestroySampler(VkSampler sampler)
 {
     vkDestroySampler(device, sampler, VK_NULL_HANDLE);
 }
 
-VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipeline)
+VkResult RenderDevice::CreatePipeline(const char *shaderName, Pipeline* pPipeline)
 {
     VkResult err;
 
@@ -511,7 +511,7 @@ VkResult RenderDriver::CreatePipeline(const char *shaderName, Pipeline* pPipelin
     return err;
 }
 
-void RenderDriver::DestroyPipeline(Pipeline pipeline)
+void RenderDevice::DestroyPipeline(Pipeline pipeline)
 {
     vkDestroyPipeline(device, pipeline->vkPipeline, VK_NULL_HANDLE);
     DestroyDescriptorSets(std::size(pipeline->vkDescriptorSets), std::data(pipeline->vkDescriptorSets));
@@ -523,7 +523,7 @@ void RenderDriver::DestroyPipeline(Pipeline pipeline)
     delete pipeline;
 }
 
-VkResult RenderDriver::CreateCommandBuffer(VkCommandBuffer *pCommandBuffer)
+VkResult RenderDevice::CreateCommandBuffer(VkCommandBuffer *pCommandBuffer)
 {
     VkResult err;
 
@@ -539,17 +539,17 @@ VkResult RenderDriver::CreateCommandBuffer(VkCommandBuffer *pCommandBuffer)
     return err;
 }
 
-void RenderDriver::DestroyCommandBuffer(VkCommandBuffer commandBuffer)
+void RenderDevice::DestroyCommandBuffer(VkCommandBuffer commandBuffer)
 {
     DestroyCommandBuffers(1, &commandBuffer);
 }
 
-void RenderDriver::DestroyCommandBuffers(uint32_t count, const VkCommandBuffer* pCommandBuffers)
+void RenderDevice::DestroyCommandBuffers(uint32_t count, const VkCommandBuffer* pCommandBuffers)
 {
     vkFreeCommandBuffers(device, commandPool, count, pCommandBuffers);
 }
 
-VkResult RenderDriver::CreateFence(VkFence *pFence)
+VkResult RenderDevice::CreateFence(VkFence *pFence)
 {
     VkResult err;
 
@@ -563,12 +563,12 @@ VkResult RenderDriver::CreateFence(VkFence *pFence)
     return err;
 }
 
-void RenderDriver::DestroyFence(VkFence fence)
+void RenderDevice::DestroyFence(VkFence fence)
 {
     vkDestroyFence(device, fence, VK_NULL_HANDLE);
 }
 
-VkResult RenderDriver::CreateSemaphore(VkSemaphore *pSemaphore)
+VkResult RenderDevice::CreateSemaphore(VkSemaphore *pSemaphore)
 {
     VkResult err;
 
@@ -581,12 +581,12 @@ VkResult RenderDriver::CreateSemaphore(VkSemaphore *pSemaphore)
     return err;
 }
 
-void RenderDriver::DestroySemaphore(VkSemaphore semaphore)
+void RenderDevice::DestroySemaphore(VkSemaphore semaphore)
 {
     vkDestroySemaphore(device, semaphore, VK_NULL_HANDLE);
 }
 
-VkResult RenderDriver::CreateDescriptorSetLayout(uint32_t bindingCount, const VkDescriptorSetLayoutBinding *pBindings, VkDescriptorSetLayout* pDescriptorSetLayout)
+VkResult RenderDevice::CreateDescriptorSetLayout(uint32_t bindingCount, const VkDescriptorSetLayoutBinding *pBindings, VkDescriptorSetLayout* pDescriptorSetLayout)
 {
     VkResult err;
 
@@ -601,12 +601,12 @@ VkResult RenderDriver::CreateDescriptorSetLayout(uint32_t bindingCount, const Vk
     return err;
 }
 
-void RenderDriver::DestroyDescriptorSetLayout(VkDescriptorSetLayout descriptorSetLayout)
+void RenderDevice::DestroyDescriptorSetLayout(VkDescriptorSetLayout descriptorSetLayout)
 {
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, VK_NULL_HANDLE);
 }
 
-VkResult RenderDriver::CreateDescriptorSets(uint32_t descriptorSetCount, const VkDescriptorSetLayout* pDescriptorSetLayouts, VkDescriptorSet *pDescriptorSets)
+VkResult RenderDevice::CreateDescriptorSets(uint32_t descriptorSetCount, const VkDescriptorSetLayout* pDescriptorSetLayouts, VkDescriptorSet *pDescriptorSets)
 {
     VkResult err;
 
@@ -622,18 +622,18 @@ VkResult RenderDriver::CreateDescriptorSets(uint32_t descriptorSetCount, const V
     return err;
 }
 
-void RenderDriver::DestroyDescriptorSets(uint32_t descriptorSetCount, VkDescriptorSet* pDescriptorSets)
+void RenderDevice::DestroyDescriptorSets(uint32_t descriptorSetCount, VkDescriptorSet* pDescriptorSets)
 {
     vkFreeDescriptorSets(device, descriptorPool, descriptorSetCount, pDescriptorSets);
 }
 
-void RenderDriver::BeginSingleTimeCommandBuffer(VkCommandBuffer *pCommandBuffer)
+void RenderDevice::BeginSingleTimeCommandBuffer(VkCommandBuffer *pCommandBuffer)
 {
     CreateCommandBuffer(pCommandBuffer);
     BeginCommandBuffer(*pCommandBuffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 }
 
-void RenderDriver::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer)
+void RenderDevice::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer)
 {
     EndCommandBuffer(commandBuffer);
     SubmitQueue(commandBuffer, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, VK_NULL_HANDLE);
@@ -642,7 +642,7 @@ void RenderDriver::EndSingleTimeCommandBuffer(VkCommandBuffer commandBuffer)
     DestroyCommandBuffers(1, &commandBuffer);
 }
 
-void RenderDriver::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags)
+void RenderDevice::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags)
 {
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -651,12 +651,12 @@ void RenderDriver::BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBu
     vkBeginCommandBuffer(commandBuffer, &beginInfo);
 }
 
-void RenderDriver::EndCommandBuffer(VkCommandBuffer commandBuffer)
+void RenderDevice::EndCommandBuffer(VkCommandBuffer commandBuffer)
 {
     vkEndCommandBuffer(commandBuffer);
 }
 
-void RenderDriver::CmdMemoryBarrier(VkCommandBuffer commandBuffer, Texture texture, VkImageLayout newLayout)
+void RenderDevice::CmdMemoryBarrier(VkCommandBuffer commandBuffer, Texture texture, VkImageLayout newLayout)
 {
     VkImageLayout oldLayout = texture->layout;
 
@@ -748,7 +748,7 @@ DO_MEMORY_IAMGE_BARRIER_TAG:
     texture->layout = newLayout;
 }
 
-void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer, Texture texture)
+void RenderDevice::CmdBeginRendering(VkCommandBuffer commandBuffer, Texture texture)
 {
     VkRenderingAttachmentInfo colorRenderingAttachment = {
         .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -775,12 +775,12 @@ void RenderDriver::CmdBeginRendering(VkCommandBuffer commandBuffer, Texture text
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
 }
 
-void RenderDriver::CmdEndRendering(VkCommandBuffer commandBuffer)
+void RenderDevice::CmdEndRendering(VkCommandBuffer commandBuffer)
 {
     vkCmdEndRendering(commandBuffer);
 }
 
-void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h)
+void RenderDevice::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h)
 {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->vkPipeline);
 
@@ -812,12 +812,12 @@ void RenderDriver::CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipel
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
-void RenderDriver::CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset)
+void RenderDevice::CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset)
 {
     CmdBindVertexBuffers(commandBuffer, 1, &buffer, &offset);
 }
 
-void RenderDriver::CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t count, Buffer *pBuffers, VkDeviceSize *pOffsets)
+void RenderDevice::CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t count, Buffer *pBuffers, VkDeviceSize *pOffsets)
 {
     std::vector<VkBuffer> buffers(count);
 
@@ -827,32 +827,32 @@ void RenderDriver::CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t 
     vkCmdBindVertexBuffers(commandBuffer, 0, count, std::data(buffers), pOffsets);
 }
 
-void RenderDriver::CmdBindIndexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, uint32_t offset)
+void RenderDevice::CmdBindIndexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, uint32_t offset)
 {
     vkCmdBindIndexBuffer(commandBuffer, buffer->vkBuffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
-void RenderDriver::CmdPushConstants(VkCommandBuffer commandBuffer, Pipeline pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void *data)
+void RenderDevice::CmdPushConstants(VkCommandBuffer commandBuffer, Pipeline pipeline, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void *data)
 {
     vkCmdPushConstants(commandBuffer, pipeline->vkPipelineLayout, stageFlags, offset, size, data);
 }
 
-void RenderDriver::CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount)
+void RenderDevice::CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount)
 {
     vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
 }
 
-void RenderDriver::CmdDrawIndexed(VkCommandBuffer commandBuffer, uint32_t indexCount)
+void RenderDevice::CmdDrawIndexed(VkCommandBuffer commandBuffer, uint32_t indexCount)
 {
     vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
 }
 
-void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, VkFence fence)
+void RenderDevice::SubmitQueue(VkCommandBuffer commandBuffer, VkFence fence)
 {
     SubmitQueue(commandBuffer, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, fence);
 }
 
-void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, uint32_t signalSemaphoreCount, const VkSemaphore* pSignalSemaphores, VkFence fence)
+void RenderDevice::SubmitQueue(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, uint32_t signalSemaphoreCount, const VkSemaphore* pSignalSemaphores, VkFence fence)
 {
     VkResult err;
 
@@ -881,7 +881,7 @@ void RenderDriver::SubmitQueue(VkCommandBuffer commandBuffer, uint32_t waitSemap
     assert(!err);
 }
 
-void RenderDriver::SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores)
+void RenderDevice::SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores)
 {
     VkResult err;
 
@@ -910,7 +910,7 @@ void RenderDriver::SubmitAndPresentFrame(VkCommandBuffer commandBuffer, uint32_t
     assert(!err);
 }
 
-void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, SwapchainImage* pSwapchainImage)
+void RenderDevice::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, SwapchainImage* pSwapchainImage)
 {
     flightIndex = (flightIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
@@ -931,12 +931,12 @@ void RenderDriver::AcquiredNextFrame(VkCommandBuffer* pCommandBuffer, SwapchainI
     *pSwapchainImage = listSwapchainImage[imageIndex];
 }
 
-void RenderDriver::RebuildSwapchain()
+void RenderDevice::RebuildSwapchain()
 {
     _CreateSwapchain(swapchain);
 }
 
-void RenderDriver::ReadBuffer(Buffer buffer, size_t size, void *data)
+void RenderDevice::ReadBuffer(Buffer buffer, size_t size, void *data)
 {
     void* src;
     vmaMapMemory(allocator, buffer->allocation, &src);
@@ -944,7 +944,7 @@ void RenderDriver::ReadBuffer(Buffer buffer, size_t size, void *data)
     vmaUnmapMemory(allocator, buffer->allocation);
 }
 
-void RenderDriver::WriteBuffer(Buffer buffer, size_t size, const void *data)
+void RenderDevice::WriteBuffer(Buffer buffer, size_t size, const void *data)
 {
     if (buffer->memoryUsage == VMA_MEMORY_USAGE_GPU_ONLY) {
         Buffer stagingBuffer;
@@ -962,7 +962,7 @@ void RenderDriver::WriteBuffer(Buffer buffer, size_t size, const void *data)
     vmaUnmapMemory(allocator, buffer->allocation);
 }
 
-void RenderDriver::CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBuffer, uint64_t dstOffset, uint64_t size)
+void RenderDevice::CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBuffer, uint64_t dstOffset, uint64_t size)
 {
     VkCommandBuffer commandBuffer;
     CreateCommandBuffer(&commandBuffer);
@@ -978,7 +978,7 @@ void RenderDriver::CopyBuffer(Buffer srcBuffer, uint64_t srcOffset, Buffer dstBu
     EndSingleTimeCommandBuffer(commandBuffer);
 }
 
-void RenderDriver::WriteTexture(Texture texture, uint64_t size, void *pixels)
+void RenderDevice::WriteTexture(Texture texture, uint64_t size, void *pixels)
 {
     Buffer stagingBuffer;
     CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, &stagingBuffer);
@@ -1016,22 +1016,22 @@ void RenderDriver::WriteTexture(Texture texture, uint64_t size, void *pixels)
     DestroyBuffer(stagingBuffer);
 }
 
-void RenderDriver::DeviceWaitIdle()
+void RenderDevice::DeviceWaitIdle()
 {
     vkDeviceWaitIdle(device);
 }
 
-void RenderDriver::QueueWaitIdle()
+void RenderDevice::QueueWaitIdle()
 {
     vkQueueWaitIdle(queue);
 }
 
-void RenderDriver::WaitForFences(uint32_t count, const VkFence *pFences)
+void RenderDevice::WaitForFences(uint32_t count, const VkFence *pFences)
 {
     vkWaitForFences(device, count, pFences, VK_TRUE, UINT64_MAX);
 }
 
-VkResult RenderDriver::LoadTextureFromFile(const char *filename, Texture *pTexture)
+VkResult RenderDevice::LoadTextureFromFile(const char *filename, Texture *pTexture)
 {
     VkResult err;
 
@@ -1055,7 +1055,7 @@ TAG_LOAD_TEXTURE_FROM_FILE:
     return err;
 }
 
-void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer)
+void RenderDevice::BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer)
 {
     if (!pipeline->descriptorSetInfos.contains(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
@@ -1078,7 +1078,7 @@ void RenderDriver::BindUniformBuffer(Pipeline pipeline, const std::string &name,
     vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
 }
 
-void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler)
+void RenderDevice::BindTexture(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler)
 {
     if (!pipeline->descriptorSetInfos.contains(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
@@ -1101,12 +1101,12 @@ void RenderDriver::BindTexture(Pipeline pipeline, const std::string& name, Textu
     vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
 }
 
-VkImageView RenderDriver::GetVkImageViewHandle(Texture texture) const
+VkImageView RenderDevice::GetVkImageViewHandle(Texture texture) const
 {
     return texture->vkImageView;
 }
 
-VkResult RenderDriver::_CreateInstance()
+VkResult RenderDevice::_CreateInstance()
 {
     VkResult err;
 
@@ -1157,7 +1157,7 @@ VkResult RenderDriver::_CreateInstance()
     return err;
 }
 
-VkResult RenderDriver::_CreateDevice()
+VkResult RenderDevice::_CreateDevice()
 {
     VkResult err;
 
@@ -1207,7 +1207,7 @@ TAG_DEVICE_Create_END:
     return err;
 }
 
-VkResult RenderDriver::_CreateMemoryAllocator()
+VkResult RenderDevice::_CreateMemoryAllocator()
 {
     VkResult err;
 
@@ -1227,7 +1227,7 @@ VkResult RenderDriver::_CreateMemoryAllocator()
     return err;
 }
 
-VkResult RenderDriver::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
+VkResult RenderDevice::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
 {
     VkResult err;
 
@@ -1322,7 +1322,7 @@ VkResult RenderDriver::_CreateSwapchain(VkSwapchainKHR oldSwapchain)
     return err;
 }
 
-VkResult RenderDriver::_CreateCommandPool()
+VkResult RenderDevice::_CreateCommandPool()
 {
     VkResult err;
 
@@ -1338,7 +1338,7 @@ VkResult RenderDriver::_CreateCommandPool()
     return err;
 }
 
-VkResult RenderDriver::_CreateDescriptorPool()
+VkResult RenderDevice::_CreateDescriptorPool()
 {
     VkResult err;
 
@@ -1369,7 +1369,7 @@ VkResult RenderDriver::_CreateDescriptorPool()
     return err;
 }
 
-VkResult RenderDriver::_CreateShaderModule(const char* path, VkShaderModule* pShaderModule)
+VkResult RenderDevice::_CreateShaderModule(const char* path, VkShaderModule* pShaderModule)
 {
     size_t size;
     VkResult err;
@@ -1390,7 +1390,7 @@ VkResult RenderDriver::_CreateShaderModule(const char* path, VkShaderModule* pSh
     return err;
 }
 
-void RenderDriver::_DestroySwapchain()
+void RenderDevice::_DestroySwapchain()
 {
     for (uint32_t i = 0; i < minImageCount; i++) {
         vkDestroyImageView(device, listSwapchainImage[i]->vkImageView, VK_NULL_HANDLE);
@@ -1402,7 +1402,7 @@ void RenderDriver::_DestroySwapchain()
     vkDestroySwapchainKHR(device, swapchain, VK_NULL_HANDLE);
 }
 
-VkResult RenderDriver::_InitSyncObjects()
+VkResult RenderDevice::_InitSyncObjects()
 {
     VkResult err;
 
@@ -1424,7 +1424,7 @@ VkResult RenderDriver::_InitSyncObjects()
     return err;
 }
 
-void RenderDriver::_DestroySyncObjects()
+void RenderDevice::_DestroySyncObjects()
 {
     DestroyCommandBuffers(MAX_FRAMES_IN_FLIGHT, std::data(frameCommandBuffers));
 
@@ -1434,7 +1434,7 @@ void RenderDriver::_DestroySyncObjects()
     }
 }
 
-VkResult RenderDriver::_PerInitSamplers()
+VkResult RenderDevice::_PerInitSamplers()
 {
     VkResult err;
 
@@ -1447,13 +1447,13 @@ VkResult RenderDriver::_PerInitSamplers()
     return err;
 }
 
-void RenderDriver::_DestroyPerInitSamplers()
+void RenderDevice::_DestroyPerInitSamplers()
 {
     DestroySampler(linearRepeatSampler);
     DestroySampler(nearestClampSampler);
 }
 
-VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
+VmaMemoryUsage RenderDevice::_GuessMemoryUsage(VkBufferUsageFlags usage)
 {
     if ((usage & VK_BUFFER_USAGE_TRANSFER_SRC_BIT) && (usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT))
         return VMA_MEMORY_USAGE_GPU_ONLY;
@@ -1473,7 +1473,7 @@ VmaMemoryUsage RenderDriver::_GuessMemoryUsage(VkBufferUsageFlags usage)
     return VMA_MEMORY_USAGE_CPU_TO_GPU;
 }
 
-SwapchainImage RenderDriver::_WrapSwapchainImage(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
+SwapchainImage RenderDevice::_WrapSwapchainImage(uint32_t w, uint32_t h, VkImage image, VkImageView imageView)
 {
     Texture wrapTexture = new QVkTexture;
     wrapTexture->width = w;

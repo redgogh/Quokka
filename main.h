@@ -2,7 +2,7 @@
 #define MAIN_H_
 
 #include <memory>
-#include "driver/render_driver.h"
+#include "driver/render_device.h"
 #include "platform/glfw3/window.h"
 
 #include <stdlib.h>
