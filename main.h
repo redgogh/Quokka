@@ -22,6 +22,7 @@
 #include <quokka/qk_format.h>
 #include <tiny_gltf.h>
 #include "engine/objects/render_object.h"
+#include "engine/loader/GLTF/GLTF.h"
 
 Vertex vertices[] = {
     {{ -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }}, // 左下

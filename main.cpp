@@ -19,18 +19,6 @@ int main()
     chdir(_cwd);
 #endif
 
-    tinygltf::TinyGLTF loader;
-    tinygltf::Model model;
-    std::string tinyGlTFErr;
-    std::string tinyGLTFWarn;
-    loader.LoadBinaryFromFile(&model, &tinyGLTFWarn, &tinyGlTFErr, "../misc/cube.glb");
-
-    if (!tinyGlTFErr.empty())
-        throw std::runtime_error(tinyGlTFErr);
-
-    if (!tinyGLTFWarn.empty())
-        throw std::runtime_error(tinyGLTFWarn);
-
     setbuf(stdout, NULL);
 
     const std::unique_ptr<Window> window = std::make_unique<Window>("Quokka", 1450, 850);
