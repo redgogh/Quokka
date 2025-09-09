@@ -1190,6 +1190,9 @@ VkResult RenderDevice::_CreateDevice()
     dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
     dynamicRenderingFeature.dynamicRendering = VK_TRUE;
 
+    VkPhysicalDeviceFeatures deviceFeatures = {};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
+
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.pNext = &dynamicRenderingFeature;
@@ -1197,6 +1200,7 @@ VkResult RenderDevice::_CreateDevice()
     deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
     deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(std::size(extensions));
     deviceCreateInfo.ppEnabledExtensionNames = std::data(extensions);
+    deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 
     err = vkCreateDevice(physicalDevice, &deviceCreateInfo, VK_NULL_HANDLE, &device);
     VK_CHECK_ERROR(err);
@@ -1441,16 +1445,12 @@ VkResult RenderDevice::_PerInitSamplers()
     err = CreateSampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, true, 16.0f, true, &linearRepeatSampler);
     VK_CHECK_ERROR(err);
 
-    err = CreateSampler(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false, 1.0f, false, &nearestClampSampler);
-    VK_CHECK_ERROR(err);
-
     return err;
 }
 
 void RenderDevice::_DestroyPerInitSamplers()
 {
     DestroySampler(linearRepeatSampler);
-    DestroySampler(nearestClampSampler);
 }
 
 VmaMemoryUsage RenderDevice::_GuessMemoryUsage(VkBufferUsageFlags usage)

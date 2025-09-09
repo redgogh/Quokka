@@ -107,7 +107,6 @@ public:
     VkFormat GetSwapchainFormat() const { return surfaceFormat.format; }
     VkImageView GetVkImageViewHandle(Texture texture) const;
     VkSampler GetLinearRepeatSampler() { return linearRepeatSampler; }
-    VkSampler GetNearestClampSampler() { return nearestClampSampler; }
 
 private:
     VkResult _CreateInstance();
@@ -161,7 +160,6 @@ private:
 
     /* sampler */
     VkSampler linearRepeatSampler = VK_NULL_HANDLE;
-    VkSampler nearestClampSampler = VK_NULL_HANDLE;
 };
 
 #endif /* RENDER_DRIVER_H_ */
