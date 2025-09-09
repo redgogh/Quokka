@@ -1,5 +1,7 @@
 #include "editor.h"
 
+#include <quokka/qk_format.h>
+
 GameEditor::GameEditor(RenderDriver* pDriver, Window* pWindow)
     : driver(pDriver), hwnd(pWindow)
 {
@@ -57,12 +59,6 @@ void GameEditor::EndFrame(VkCommandBuffer commandBuffer)
     QkImGuiVulkanHEndFrame(commandBuffer);
 }
 
-void GameEditor::ShowDemoWindow()
-{
-    static bool open = true;
-    ImGui::ShowDemoWindow(&open);
-}
-
 void GameEditor::RegisterWindow(const std::string &name, std::function<void()> drawFunc)
 {
     windows[name] = { name, drawFunc, true };
@@ -81,4 +77,26 @@ ImTextureID GameEditor::CreateTextureId(Texture texture)
 void GameEditor::DestroyTextureId(ImTextureID textureId)
 {
     QkImGuiRemoveTexture(textureId);
+}
+
+void GameEditor::ShowDemoWindow()
+{
+    static bool open = true;
+    ImGui::ShowDemoWindow(&open);
+}
+
+void GameEditor::DrawFPS(uint32_t fps)
+{
+    ImVec2 wpos = ImGui::GetWindowPos();
+    ImVec2 wsize = ImGui::GetWindowSize();
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+    std::string _text = qk_format("FPS: %u", fps).c_str();
+    const char* fpsText = _text.c_str();
+    ImVec2 textSize = ImGui::CalcTextSize(fpsText);
+
+    ImU32 textColor = IM_COL32(0, 255, 0, 255);
+    float xOffset = wpos.x + wsize.x - textSize.x - 25;
+    float yOffset = wpos.y + textSize.y + 20;
+    drawList->AddText(ImVec2(xOffset, yOffset), textColor, fpsText);
 }

@@ -24,8 +24,6 @@ public:
     void BeginNewFrame(VkCommandBuffer commandBuffer);
     void EndFrame(VkCommandBuffer commandBuffer);
 
-    void ShowDemoWindow();
-
     ImTextureID CreateTextureId(Texture texture);
     void DestroyTextureId(ImTextureID textureId);
 
@@ -33,6 +31,10 @@ public:
     EditorWindow& GetWindow(const std::string& name) { return windows[name]; }
     void RegisterViewport(const std::string& name, std::function<void()> drawFunc);
     EditorWindow& GetViewport(const std::string& name) { return viewports[name]; }
+
+public:
+    static void ShowDemoWindow();
+    static void DrawFPS(uint32_t fps);
 
 private:
     RenderDriver* driver = VK_NULL_HANDLE;

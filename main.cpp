@@ -1,47 +1,4 @@
-#include <memory>
-#include "driver/render_driver.h"
-#include "platform/glfw3/window.h"
-
-#include <stdlib.h>
-#include <unistd.h>
-
-#ifdef WIN32
-#include <direct.h>
-#endif
-
-#include <iostream>
-
-#include <stb/stb_image.h>
-
-#include "rendering/camera/camera.h"
-#include "platform/event/dispatcher.h"
-#include "ui/editor/editor.h"
-#include <quokka/qk_format.h>
-
-struct Vertex {
-    glm::vec2 pos;
-    glm::vec2 uv;
-};
-
-Vertex vertices[] = {
-    {{ -0.5f, -0.5f }, { 0.0f, 0.0f }}, // 左下
-    {{  0.5f, -0.5f }, { 1.0f, 0.0f }}, // 右下
-    {{  0.5f,  0.5f }, { 1.0f, 1.0f }}, // 右上
-    {{ -0.5f,  0.5f }, { 0.0f, 1.0f }}  // 左上
-};
-
-uint32_t indices[] = {
-    0, 1, 2, // 第一个三角形
-    2, 3, 0  // 第二个三角形
-};
-
-struct DragState {
-    bool dragging = false;
-    double startX = 0.0f, startY = 0.0f;
-    glm::vec3 startCameraPos{ 0.0f, 0.0f, 0.0f };
-};
-
-DragState dragState;
+#include "main.h"
 
 int main()
 {
@@ -88,7 +45,6 @@ int main()
     driver->CreateBuffer(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &uniformBuffer);
     driver->BindUniformBuffer(pipeline, "camera", 0, sizeof(glm::mat4), uniformBuffer);
 
-    float aspectRatio = driver->GetSwapchainAspectRatio();
     Camera camera(0.0f, 0.0f, 3.0f);
 
     // 离屏渲染
@@ -110,10 +66,36 @@ int main()
 
     ImTextureID textureId = editor->CreateTextureId(v2Texture);
 
-
     uint32_t fps = 0;
     uint32_t frameCount = 0;
     double lastFrameTime = 0;
+
+    editor->RegisterViewport("视图", [&]() {
+        // 只有当焦点在 viewport 窗口上才触发 Move 操作
+        if (ImGui::IsWindowFocused()) {
+            if (dispatcher->IsKeyHeld(GLFW_KEY_W))
+                camera.Move(1, 0, 0);
+            if (dispatcher->IsKeyHeld(GLFW_KEY_S))
+                camera.Move(-1, 0, 0);
+            if (dispatcher->IsKeyHeld(GLFW_KEY_A))
+                camera.Move(0, -1, 0);
+            if (dispatcher->IsKeyHeld(GLFW_KEY_D))
+                camera.Move(0, 1, 0);
+        }
+
+        ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
+        if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
+            watchVWSize = currentVWSize;
+        ImGui::Image(textureId, currentVWSize);
+
+        // fps
+        GameEditor::DrawFPS(fps);
+    });
+
+    editor->RegisterWindow("检视器", [&camera]() {
+        glm::vec3& position = camera.GetPosition();
+        QkImGuiDragFloat3("位置", glm::value_ptr(position), 0.01f);
+    });
 
     while (!window->ShouldClose()) {
         dispatcher->PollEvents();
@@ -158,47 +140,9 @@ int main()
         driver->CmdMemoryBarrier(cmd, swapchainImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
         driver->CmdBeginRendering(cmd, swapchainImage);
 
-        {
-            editor->BeginNewFrame(cmd);
-            editor->ShowDemoWindow();
-
-            if (QkImGuiBeginViewport("视口")) {
-                // 只有当焦点在 viewport 窗口上才触发 Move 操作
-                if (ImGui::IsWindowFocused()) {
-                    if (dispatcher->IsKeyHeld(GLFW_KEY_W))
-                        camera.Move(1, 0, 0);
-                    if (dispatcher->IsKeyHeld(GLFW_KEY_S))
-                        camera.Move(-1, 0, 0);
-                    if (dispatcher->IsKeyHeld(GLFW_KEY_A))
-                        camera.Move(0, -1, 0);
-                    if (dispatcher->IsKeyHeld(GLFW_KEY_D))
-                        camera.Move(0, 1, 0);
-                }
-
-                ImVec2 currentVWSize = ImGui::GetContentRegionAvail();
-                if (watchVWSize.x != currentVWSize.x || watchVWSize.y != currentVWSize.y)
-                    watchVWSize = currentVWSize;
-                ImGui::Image(textureId, currentVWSize);
-
-                // fps
-                ImVec2 wpos = ImGui::GetWindowPos();
-                ImVec2 wsize = ImGui::GetWindowSize();
-                ImDrawList* drawList = ImGui::GetWindowDrawList();
-                std::string _text = qk_format("FPS: %u", fps).c_str();
-                const char* fpsText = _text.c_str();
-                ImVec2 textSize = ImGui::CalcTextSize(fpsText);
-                drawList->AddText(ImVec2(wpos.x + wsize.x - textSize.x - 25, wpos.y + textSize.y + 20), IM_COL32(0, 255, 0, 255), fpsText);
-
-                QkImGuiEndViewport();
-            }
-
-            if (QkImGuiBegin("属性面板")) {
-                glm::vec3& position = camera.GetPosition();
-                QkImGuiDragFloat3("位置", glm::value_ptr(position), 0.01f);
-                QkImGuiEnd();
-            }
-            editor->EndFrame(cmd);
-        }
+        editor->BeginNewFrame(cmd);
+        GameEditor::ShowDemoWindow();
+        editor->EndFrame(cmd);
 
         driver->CmdEndRendering(cmd);
         driver->CmdMemoryBarrier(cmd, swapchainImage, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
