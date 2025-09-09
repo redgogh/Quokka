@@ -110,6 +110,11 @@ int main()
 
     ImTextureID textureId = editor->CreateTextureId(v2Texture);
 
+
+    uint32_t fps = 0;
+    uint32_t frameCount = 0;
+    double lastFrameTime = 0;
+
     while (!window->ShouldClose()) {
         dispatcher->PollEvents();
 
@@ -179,7 +184,8 @@ int main()
                 ImVec2 wpos = ImGui::GetWindowPos();
                 ImVec2 wsize = ImGui::GetWindowSize();
                 ImDrawList* drawList = ImGui::GetWindowDrawList();
-                const char* fpsText = qk_format("FPS: %.1f", 100).c_str();
+                std::string _text = qk_format("FPS: %u", fps).c_str();
+                const char* fpsText = _text.c_str();
                 ImVec2 textSize = ImGui::CalcTextSize(fpsText);
                 drawList->AddText(ImVec2(wpos.x + wsize.x - textSize.x - 25, wpos.y + textSize.y + 20), IM_COL32(0, 255, 0, 255), fpsText);
 
@@ -198,6 +204,17 @@ int main()
         driver->CmdMemoryBarrier(cmd, swapchainImage, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
         driver->EndCommandBuffer(cmd);
         driver->SubmitAndPresentFrame(cmd, 0, VK_NULL_HANDLE);
+
+        /* fps 计算 */
+        frameCount++;
+
+        double currentTime = glfwGetTime();
+        double elapsedTime = currentTime - lastFrameTime;
+        if (elapsedTime > 1) {
+            fps = frameCount;
+            frameCount = 0;
+            lastFrameTime = currentTime;
+        }
     }
 
     driver->DeviceWaitIdle();
