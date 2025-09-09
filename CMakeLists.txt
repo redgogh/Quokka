@@ -10,10 +10,10 @@ ADD_DEFINITIONS(
 INCLUDE_DIRECTORIES(./)
 INCLUDE_DIRECTORIES(SYSTEM "thirdparty" "include")
 
-ADD_SUBDIRECTORY("modules/volk")
-ADD_SUBDIRECTORY("modules/stb")
-ADD_SUBDIRECTORY("modules/imgui")
-ADD_SUBDIRECTORY("modules/spirv")
+ADD_SUBDIRECTORY("thirdparty/volk")
+ADD_SUBDIRECTORY("thirdparty/stb")
+ADD_SUBDIRECTORY("thirdparty/imgui")
+ADD_SUBDIRECTORY("thirdparty/spirv")
 ADD_SUBDIRECTORY("thirdparty/tinygltf")
 
 FILE(GLOB_RECURSE SOURCES
