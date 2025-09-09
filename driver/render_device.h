@@ -42,7 +42,7 @@ public:
     void DestroyBuffer(Buffer buffer);
     VkResult CreateTexture(uint32_t w, uint32_t h, VkFormat format, VkImageUsageFlags usage, Texture *pTexture);
     void DestroyTexture(Texture Texture);
-    VkResult CreateSampler(VkFilter filter, VkSamplerAddressMode addressMode, bool enableAnisotropy, float maxAnisotropy, bool useMipmaps, VkSampler* pSampler);
+    VkResult CreateSampler(VkFilter filter, VkSamplerAddressMode addressMode, VkBool32 useMipmaps, VkSampler* pSampler);
     void DestroySampler(VkSampler sampler);
     VkResult CreatePipeline(const char *shaderName, Pipeline* pPipeline);
     void DestroyPipeline(Pipeline pipeline);

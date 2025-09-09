@@ -280,7 +280,7 @@ void RenderDevice::DestroyTexture(Texture texture2D)
     delete texture2D;
 }
 
-VkResult RenderDevice::CreateSampler(VkFilter filter, VkSamplerAddressMode addressMode, bool enableAnisotropy, float maxAnisotropy, bool useMipmaps, VkSampler* pSampler)
+VkResult RenderDevice::CreateSampler(VkFilter filter, VkSamplerAddressMode addressMode, VkBool32 useMipmaps, VkSampler* pSampler)
 {
     VkResult err;
 
@@ -291,13 +291,13 @@ VkResult RenderDevice::CreateSampler(VkFilter filter, VkSamplerAddressMode addre
     samplerCreateInfo.addressModeU = addressMode;
     samplerCreateInfo.addressModeV = addressMode;
     samplerCreateInfo.addressModeW = addressMode;
-    samplerCreateInfo.anisotropyEnable = enableAnisotropy ? VK_TRUE : VK_FALSE;
-    samplerCreateInfo.maxAnisotropy = maxAnisotropy;
+    samplerCreateInfo.anisotropyEnable = VK_TRUE;
+    samplerCreateInfo.maxAnisotropy = 16.0f;
     samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
     samplerCreateInfo.compareEnable = VK_FALSE;
     samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerCreateInfo.mipmapMode = useMipmaps ? VK_SAMPLER_MIPMAP_MODE_NEAREST : VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerCreateInfo.mipmapMode = useMipmaps ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
     samplerCreateInfo.mipLodBias = 0.0f;
     samplerCreateInfo.minLod = 0.0f;
     samplerCreateInfo.maxLod = useMipmaps ? VK_LOD_CLAMP_NONE : 0.0f;
@@ -1442,7 +1442,7 @@ VkResult RenderDevice::_PerInitSamplers()
 {
     VkResult err;
 
-    err = CreateSampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, true, 16.0f, true, &linearRepeatSampler);
+    err = CreateSampler(VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_REPEAT, VK_TRUE, &linearRepeatSampler);
     VK_CHECK_ERROR(err);
 
     return err;
