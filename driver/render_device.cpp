@@ -63,6 +63,12 @@ VkImageView dGetVkImageView(Texture texture)
     return texture->vkImageView;
 }
 
+void dGetTextureSize(Texture texture, uint32_t* pWidth, uint32_t* pHeight)
+{
+    *pWidth = texture->width;
+    *pHeight = texture->height;
+}
+
 RenderDevice::RenderDevice()
 {
     VkResult err;

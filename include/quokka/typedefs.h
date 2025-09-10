@@ -17,4 +17,7 @@
 #define QK_MAYBE_UNUSED
 #endif
 
+/* 表示什么都不做，类似 TODO */
+#define DO_NOTHING() do {} while(0)
+
 #endif /* _TYPEDEFS_H_ */

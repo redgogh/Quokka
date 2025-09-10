@@ -1,5 +1,7 @@
 #include "main.h"
 
+#include "engine/render/screen_render_pass.h"
+
 int main()
 {
 #ifdef WIN32
@@ -29,6 +31,8 @@ int main()
     VkResult err = window->CreateWindowSurface(device->GetInstance(), VK_NULL_HANDLE, &surface);
     assert(!err);
     device->Initialize(surface);
+
+    const std::unique_ptr<ScreenRenderPass> screenRenderPass = std::make_unique<ScreenRenderPass>(device.get());
 
     std::unique_ptr<GameEditor> editor = std::make_unique<GameEditor>(device.get(), window.get());
 
@@ -133,21 +137,13 @@ int main()
         device->SubmitQueue(v2CommandBuffer, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, drawFence);
         device->WaitForFences(1, &drawFence);
 
-        VkCommandBuffer cmd;
-        SwapchainImage swapchainImage;
-        device->AcquiredNextFrame(&cmd, &swapchainImage);
-        device->BeginCommandBuffer(cmd);
-        device->CmdMemoryBarrier(cmd, swapchainImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-        device->CmdBeginRendering(cmd, swapchainImage);
+        screenRenderPass->Draw([&](VkCommandBuffer commandBuffer, uint32_t w, uint32_t h) {
+            editor->BeginNewFrame(commandBuffer);
+            GameEditor::ShowDemoWindow();
+            editor->EndFrame(commandBuffer);
+        });
 
-        editor->BeginNewFrame(cmd);
-        GameEditor::ShowDemoWindow();
-        editor->EndFrame(cmd);
-
-        device->CmdEndRendering(cmd);
-        device->CmdMemoryBarrier(cmd, swapchainImage, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-        device->EndCommandBuffer(cmd);
-        device->SubmitAndPresentFrame(cmd, 0, VK_NULL_HANDLE);
+        screenRenderPass->Execute();
 
         /* fps 计算 */
         frameCount++;

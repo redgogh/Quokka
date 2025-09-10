@@ -21,11 +21,15 @@ typedef struct QVkPipeline *Pipeline;
 /* 定义 SwapchainImage 对象，因为 Texture 不太适合描述交换链图像 */
 typedef Texture SwapchainImage;
 
+#ifdef VK_API_VERSION_1_0
 /* dGetVkImage 函数用于在不依赖 RenderDevice 的情况下获取 Vulkan 原生 VkImage 对象 */
 VkImage dGetVkImage(Texture texture);
-
 /* dGetVkImageView 函数用于在不依赖 RenderDevice 的情况下获取 Vulkan 原生 VkImageView 对象 */
 VkImageView dGetVkImageView(Texture texture);
+#endif
+
+/* dGetTextureSize 函数用于在不依赖 RenderDevice 的情况下获取 Texture 对象大小 */
+void dGetTextureSize(Texture texture, uint32_t* pWidth, uint32_t* pHeight);
 
 class RenderDevice
 {
