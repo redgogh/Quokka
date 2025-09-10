@@ -4,4 +4,5 @@ cmake-build-run
 *.spv
 out
 .vs
+.DS_Store
 CMakeSettings.json
