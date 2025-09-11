@@ -6,26 +6,28 @@
 //std
 #include <queue>
 #include <functional>
+#include <string>
 
-struct RenderTarget {
+enum AttachmentUsage {
+    Color,
+    Depth
+};
+
+struct AttachmentDesc {
     Texture texture;
 };
 
 class RenderPass {
 public:
-    using DrawCallback = std::function<void(VkCommandBuffer, uint32_t, uint32_t)>;
+    using DrawCallback = std::function<void(VkCommandBuffer)>;
 
-    RenderPass(RenderDevice* v_device)
-        : device(v_device) { DO_NOTHING(); }
+    RenderPass(const std::string& name);
 
-    void Draw(const DrawCallback &drawFunc)
-      {
-        drawCallbacks.push(drawFunc);
-      }
+    void SetAttachment(const AttachmentDesc& desc);
+    void SetDrawCallback(DrawCallback callback);
 
-    virtual void Execute() = 0;
-
-protected:
-    RenderDevice* device;
-    std::queue<DrawCallback> drawCallbacks;
+private:
+    std::string name;
+    AttachmentDesc desc;
+    DrawCallback drawFunc;
 };

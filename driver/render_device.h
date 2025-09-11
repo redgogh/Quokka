@@ -31,6 +31,29 @@ VkImageView dGetVkImageView(Texture texture);
 /* dGetTextureSize 函数用于在不依赖 RenderDevice 的情况下获取 Texture 对象大小 */
 void dGetTextureSize(Texture texture, uint32_t* pWidth, uint32_t* pHeight);
 
+enum RenderAttachmentType {
+    RENDER_ATTACHMENT_TYPE_COLOR,
+    RENDER_ATTACHMENT_TYPE_DEPTH,
+};
+
+enum RenderAttachmentLoadOp {
+    RENDER_ATTACHMENT_LOAD_OP_CLEAR,
+    RENDER_ATTACHMENT_LOAD_OP_LOAD,
+    RENDER_ATTACHMENT_LOAD_OP_DONT_CARE,
+};
+
+enum RenderAttachmentStoreOp {
+    RENDER_ATTACHMENT_STORE_OP_STORE,
+    RENDER_ATTACHMENT_STORE_OP_DONT_CARE,
+};
+
+struct RenderAttachment {
+    Texture tex;
+    RenderAttachmentType type;
+    RenderAttachmentLoadOp loadOp;
+    RenderAttachmentStoreOp storeOp;
+};
+
 class RenderDevice
 {
 public:
@@ -68,7 +91,7 @@ public:
     void BeginCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferUsageFlags flags = 0);
     void EndCommandBuffer(VkCommandBuffer commandBuffer);
     void CmdMemoryBarrier(VkCommandBuffer commandBuffer, Texture texture, VkImageLayout newLayout);
-    void CmdBeginRendering(VkCommandBuffer commandBuffer, Texture texture);
+    void CmdBeginRendering(VkCommandBuffer commandBuffer, uint32_t count, const RenderAttachment* pAttachments);
     void CmdEndRendering(VkCommandBuffer commandBuffer);
     void CmdBindPipeline(VkCommandBuffer commandBuffer, Pipeline pipeline, uint32_t w, uint32_t h);
     void CmdBindVertexBuffer(VkCommandBuffer commandBuffer, Buffer buffer, VkDeviceSize offset);

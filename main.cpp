@@ -1,7 +1,5 @@
 #include "main.h"
 
-#include "engine/render/screen_render_pass.h"
-
 int main()
 {
 #ifdef WIN32
@@ -31,8 +29,6 @@ int main()
     VkResult err = window->CreateWindowSurface(device->GetInstance(), VK_NULL_HANDLE, &surface);
     assert(!err);
     device->Initialize(surface);
-
-    const std::unique_ptr<ScreenRenderPass> screenRenderPass = std::make_unique<ScreenRenderPass>(device.get());
 
     std::unique_ptr<GameEditor> editor = std::make_unique<GameEditor>(device.get(), window.get());
 
@@ -121,9 +117,16 @@ int main()
         // update uniform buffer
         device->WriteBuffer(uniformBuffer, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
 
+        RenderAttachment v2ColorAttachment = {
+            .tex = v2Texture,
+            .type = RENDER_ATTACHMENT_TYPE_COLOR,
+            .loadOp = RENDER_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = RENDER_ATTACHMENT_STORE_OP_STORE,
+        };
+
         device->BeginCommandBuffer(v2CommandBuffer);
         device->CmdMemoryBarrier(v2CommandBuffer, v2Texture, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-        device->CmdBeginRendering(v2CommandBuffer, v2Texture);
+        device->CmdBeginRendering(v2CommandBuffer, 1, &v2ColorAttachment);
 
         device->CmdBindPipeline(v2CommandBuffer, pipeline, watchWSize.x, watchWSize.y);
         device->CmdBindVertexBuffer(v2CommandBuffer, vertexBuffer, 0);
@@ -137,13 +140,30 @@ int main()
         device->SubmitQueue(v2CommandBuffer, 0, VK_NULL_HANDLE, 0, VK_NULL_HANDLE, drawFence);
         device->WaitForFences(1, &drawFence);
 
-        screenRenderPass->Draw([&](VkCommandBuffer commandBuffer, uint32_t w, uint32_t h) {
-            editor->BeginNewFrame(commandBuffer);
-            GameEditor::ShowDemoWindow();
-            editor->EndFrame(commandBuffer);
-        });
+        VkCommandBuffer commandBuffer;
+        SwapchainImage swapchainImage;
+        device->AcquiredNextFrame(&commandBuffer, &swapchainImage);
 
-        screenRenderPass->Execute();
+        RenderAttachment presentColorAttachment = {
+            .tex = swapchainImage,
+            .type = RENDER_ATTACHMENT_TYPE_COLOR,
+            .loadOp = RENDER_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = RENDER_ATTACHMENT_STORE_OP_STORE
+        };
+
+        device->BeginCommandBuffer(commandBuffer);
+        device->CmdMemoryBarrier(commandBuffer, swapchainImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        device->CmdBeginRendering(commandBuffer, 1, &presentColorAttachment);
+
+        editor->BeginNewFrame(commandBuffer);
+        GameEditor::ShowDemoWindow();
+        editor->EndFrame(commandBuffer);
+
+        device->CmdEndRendering(commandBuffer);
+        device->CmdMemoryBarrier(commandBuffer, swapchainImage, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        device->EndCommandBuffer(commandBuffer);
+
+        device->SubmitAndPresentFrame(commandBuffer, 0, VK_NULL_HANDLE);
 
         /* fps 计算 */
         frameCount++;

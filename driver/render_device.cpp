@@ -754,29 +754,74 @@ DO_MEMORY_IAMGE_BARRIER_TAG:
     texture->layout = newLayout;
 }
 
-void RenderDevice::CmdBeginRendering(VkCommandBuffer commandBuffer, Texture texture)
+void RenderDevice::CmdBeginRendering(VkCommandBuffer commandBuffer, uint32_t count, const RenderAttachment* pAttachments)
 {
-    VkRenderingAttachmentInfo colorRenderingAttachment = {
-        .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-        .imageView = texture->vkImageView,
-        .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-        .clearValue = {
-            .color = { 0.2f, 0.2f, 0.2f, 1.0f }
+    std::vector<VkRenderingAttachmentInfo> colorAttachments;
+
+    VkBool32 hasDepthAttachment = VK_FALSE;
+    VkRenderingAttachmentInfo depthAttachment = {};
+
+    uint32_t w = 0, h = 0;
+
+    for (uint32_t i = 0; i < count; i++) {
+        RenderAttachment attachment = pAttachments[i];
+
+        VkRenderingAttachmentInfo vkRenderingAttachmentInfo = {};
+
+        vkRenderingAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        vkRenderingAttachmentInfo.imageView = attachment.tex->vkImageView;
+        vkRenderingAttachmentInfo.imageLayout = attachment.type == RENDER_ATTACHMENT_TYPE_COLOR
+            ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+            : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        switch (attachment.loadOp) {
+            case RENDER_ATTACHMENT_LOAD_OP_CLEAR: vkRenderingAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; break;
+            case RENDER_ATTACHMENT_LOAD_OP_LOAD: vkRenderingAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD; break;
+            case RENDER_ATTACHMENT_LOAD_OP_DONT_CARE: vkRenderingAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; break;
+            default: throw std::runtime_error("[vulkan] not supported attachment load op enum value");
         }
-    };
+
+        switch (attachment.storeOp) {
+            case RENDER_ATTACHMENT_STORE_OP_STORE: vkRenderingAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE; break;
+            case RENDER_ATTACHMENT_STORE_OP_DONT_CARE: vkRenderingAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; break;
+            default: throw std::runtime_error("[vulkan] not supported attachment store op enum value");
+        }
+
+        if (attachment.type == RENDER_ATTACHMENT_TYPE_COLOR) {
+            vkRenderingAttachmentInfo.clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+            colorAttachments.push_back(vkRenderingAttachmentInfo);
+            /* 取第一个颜色附件的宽高作为渲染宽高 */
+            if (w == 0 || h == 0) {
+                w = attachment.tex->width;
+                h = attachment.tex->height;
+            }
+        } else {
+            vkRenderingAttachmentInfo.clearValue.depthStencil = { 1.0f, 0 };
+            depthAttachment = vkRenderingAttachmentInfo;
+            hasDepthAttachment = VK_TRUE;
+        }
+    }
+
+    /* 如果颜色附件是空的，则取第一个附件的宽高 */
+    if (colorAttachments.empty()) {
+        assert(pAttachments[0].tex && "[vulkan] RenderAttachment texture must be valid");
+        w = pAttachments[0].tex->width;
+        h = pAttachments[0].tex->height;
+    }
 
     VkRenderingInfo renderingInfo = {
         .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
         .renderArea = {
             .offset = { 0, 0 },
-            .extent = { texture->width, texture->height }
+            .extent = { w, h }
         },
         .layerCount = 1,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &colorRenderingAttachment
+        .colorAttachmentCount = static_cast<uint32_t>(std::size(colorAttachments)),
+        .pColorAttachments = std::data(colorAttachments),
     };
+
+    if (hasDepthAttachment)
+        renderingInfo.pDepthAttachment = &depthAttachment;
 
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
 }
