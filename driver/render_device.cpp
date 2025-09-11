@@ -764,7 +764,7 @@ void RenderDevice::CmdBeginRendering(VkCommandBuffer commandBuffer, uint32_t cou
     uint32_t w = 0, h = 0;
 
     for (uint32_t i = 0; i < count; i++) {
-        RenderAttachment attachment = pAttachments[i];
+        const RenderAttachment& attachment = pAttachments[i];
 
         VkRenderingAttachmentInfo vkRenderingAttachmentInfo = {};
 
@@ -796,6 +796,7 @@ void RenderDevice::CmdBeginRendering(VkCommandBuffer commandBuffer, uint32_t cou
                 h = attachment.tex->height;
             }
         } else {
+            assert(!hasDepthAttachment && "[vulkan] Multiple depth attachments not supported");
             vkRenderingAttachmentInfo.clearValue.depthStencil = { 1.0f, 0 };
             depthAttachment = vkRenderingAttachmentInfo;
             hasDepthAttachment = VK_TRUE;
