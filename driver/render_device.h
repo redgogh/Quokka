@@ -48,7 +48,7 @@ enum RenderAttachmentStoreOp {
 };
 
 struct RenderAttachment {
-    Texture tex;
+    Texture resource;
     RenderAttachmentType type;
     RenderAttachmentLoadOp loadOp;
     RenderAttachmentStoreOp storeOp;

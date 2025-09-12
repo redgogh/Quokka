@@ -118,8 +118,8 @@ int main()
         device->WriteBuffer(uniformBuffer, sizeof(glm::mat4), glm::value_ptr(PC_MVP));
 
         RenderAttachment v2ColorAttachment = {
-            .tex = v2Texture,
-            .type = RENDER_ATTACHMENT_TYPE_COLOR,
+            .resource = v2Texture,
+            .type = RENDER_ATTACHMENT_TYPE_COLOR,   
             .loadOp = RENDER_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = RENDER_ATTACHMENT_STORE_OP_STORE,
         };
@@ -145,10 +145,10 @@ int main()
         device->AcquiredNextFrame(&commandBuffer, &swapchainImage);
 
         RenderAttachment presentColorAttachment = {
-            .tex = swapchainImage,
+            .resource = swapchainImage,
             .type = RENDER_ATTACHMENT_TYPE_COLOR,
             .loadOp = RENDER_ATTACHMENT_LOAD_OP_CLEAR,
-            .storeOp = RENDER_ATTACHMENT_STORE_OP_STORE
+            .storeOp = RENDER_ATTACHMENT_STORE_OP_STORE,
         };
 
         device->BeginCommandBuffer(commandBuffer);

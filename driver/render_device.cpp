@@ -769,7 +769,7 @@ void RenderDevice::CmdBeginRendering(VkCommandBuffer commandBuffer, uint32_t cou
         VkRenderingAttachmentInfo vkRenderingAttachmentInfo = {};
 
         vkRenderingAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        vkRenderingAttachmentInfo.imageView = attachment.tex->vkImageView;
+        vkRenderingAttachmentInfo.imageView = attachment.resource->vkImageView;
         vkRenderingAttachmentInfo.imageLayout = attachment.type == RENDER_ATTACHMENT_TYPE_COLOR
             ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
             : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -792,8 +792,8 @@ void RenderDevice::CmdBeginRendering(VkCommandBuffer commandBuffer, uint32_t cou
             colorAttachments.push_back(vkRenderingAttachmentInfo);
             /* 取第一个颜色附件的宽高作为渲染宽高 */
             if (w == 0 || h == 0) {
-                w = attachment.tex->width;
-                h = attachment.tex->height;
+                w = attachment.resource->width;
+                h = attachment.resource->height;
             }
         } else {
             assert(!hasDepthAttachment && "[vulkan] Multiple depth attachments not supported");
@@ -805,9 +805,9 @@ void RenderDevice::CmdBeginRendering(VkCommandBuffer commandBuffer, uint32_t cou
 
     /* 如果颜色附件是空的，则取第一个附件的宽高 */
     if (colorAttachments.empty()) {
-        assert(pAttachments[0].tex && "[vulkan] RenderAttachment texture must be valid");
-        w = pAttachments[0].tex->width;
-        h = pAttachments[0].tex->height;
+        assert(pAttachments[0].resource && "[vulkan] RenderAttachment resource must be valid");
+        w = pAttachments[0].resource->width;
+        h = pAttachments[0].resource->height;
     }
 
     VkRenderingInfo renderingInfo = {
