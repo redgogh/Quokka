@@ -119,7 +119,7 @@ int main()
 
         RenderAttachment v2ColorAttachment = {
             .resource = v2Texture,
-            .type = RENDER_ATTACHMENT_TYPE_COLOR,   
+            .type = RENDER_ATTACHMENT_TYPE_COLOR,
             .loadOp = RENDER_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = RENDER_ATTACHMENT_STORE_OP_STORE,
         };
