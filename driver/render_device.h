@@ -117,8 +117,8 @@ public:
     VkResult LoadTextureFromFile(const char* filename, Texture* pTexture);
 
     /* 更新管线资源，与 Vulkan 中的描述符绑定相关 */
-    void UpdateDescriptorBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer);
-    void UpdateDescriptorSampler(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler);
+    void SetBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer);
+    void SetTexture(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler);
 
     /* Vulkan 对象资源句斌获取函数 */
     VkInstance GetInstance() const { return instance; }

@@ -43,7 +43,7 @@ int main()
 
     Buffer uniformBuffer;
     device->CreateBuffer(sizeof(glm::mat4), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &uniformBuffer);
-    device->UpdateDescriptorBuffer(pipeline, "camera", 0, sizeof(glm::mat4), uniformBuffer);
+    device->SetBuffer(pipeline, "camera", 0, sizeof(glm::mat4), uniformBuffer);
 
     Camera camera(0.0f, 0.0f, 3.0f);
 
@@ -62,7 +62,7 @@ int main()
 
     Texture quokkaLogo;
     device->LoadTextureFromFile("../misc/quokka_1.png", &quokkaLogo);
-    device->UpdateDescriptorSampler(pipeline, "tex", quokkaLogo, device->GetLinearRepeatSampler());
+    device->SetTexture(pipeline, "tex", quokkaLogo, device->GetLinearRepeatSampler());
 
     ImTextureID textureId = editor->CreateTextureId(v2Texture);
 
