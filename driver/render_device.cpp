@@ -1107,7 +1107,7 @@ TAG_LOAD_TEXTURE_FROM_FILE:
     return err;
 }
 
-void RenderDevice::BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer)
+void RenderDevice::UpdateDescriptorBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer)
 {
     if (!pipeline->descriptorSetInfos.contains(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));
@@ -1130,7 +1130,7 @@ void RenderDevice::BindUniformBuffer(Pipeline pipeline, const std::string &name,
     vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, VK_NULL_HANDLE);
 }
 
-void RenderDevice::BindTexture(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler)
+void RenderDevice::UpdateDescriptorSampler(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler)
 {
     if (!pipeline->descriptorSetInfos.contains(name))
         throw std::runtime_error(qk_format("[vulkan] error cannot found descriptor info by name '%s'", name.c_str()));

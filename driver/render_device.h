@@ -116,9 +116,9 @@ public:
     void WaitForFences(uint32_t count, const VkFence* pFences);
     VkResult LoadTextureFromFile(const char* filename, Texture* pTexture);
 
-    /* 渲染管线绑定函数，与 Vulkan 中的描述符绑定相关 */
-    void BindUniformBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer);
-    void BindTexture(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler);
+    /* 更新管线资源，与 Vulkan 中的描述符绑定相关 */
+    void UpdateDescriptorBuffer(Pipeline pipeline, const std::string &name, size_t offset, size_t range, Buffer buffer);
+    void UpdateDescriptorSampler(Pipeline pipeline, const std::string& name, Texture texture, VkSampler sampler);
 
     /* Vulkan 对象资源句斌获取函数 */
     VkInstance GetInstance() const { return instance; }
